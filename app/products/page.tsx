@@ -83,9 +83,11 @@ export default function ProductsPage() {
                   {p.name}
                   {p.requires_cleaning && <span className="text-amber-600"> ⚠️</span>}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)]">
-                  {p.sku ? `מק"ט ${p.sku} · ` : ""}
-                  {p.category || "ללא קטגוריה"}
+                <div className="text-xs text-[var(--color-text-muted)] flex gap-1">
+                  {p.sku && <span>מק"ט {p.sku}</span>}
+                  {p.sku && p.category && <span>·</span>}
+                  {p.category && <span>{p.category}</span>}
+                  {!p.sku && !p.category && <span>ללא קטגוריה</span>}
                 </div>
               </div>
               <div className="font-bold shrink-0 text-right">
