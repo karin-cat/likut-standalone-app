@@ -1,26 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-brand: #3fa34d;       /* ירוק יסוד — בהשראת Loyverse */
+  --color-brand-dark: #2f8a3d;
+  --color-brand-darker: #256e31;
+  --color-bg: #ffffff;
+  --color-bg-soft: #f5f7f5;
+  --color-text: #1f2a24;
+  --color-text-muted: #6b7a71;
+  --color-border: #e4e8e5;
+  --color-danger: #d1453b;
+  --color-warning: #b45309;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand: var(--color-brand);
+  --color-brand-dark: var(--color-brand-dark);
+  --color-brand-darker: var(--color-brand-darker);
+  --font-sans: var(--font-heebo);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg-soft);
+  color: var(--color-text);
+  font-family: var(--font-heebo), Arial, Helvetica, sans-serif;
+}
+
+/* שדות טופס בסגנון קו-תחתון מינימלי — כמו במסך ה-POS הקיים / Loyverse */
+.field-underline {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  padding: 10px 2px;
+  font-size: 16px;
+  outline: none;
+}
+.field-underline:focus {
+  border-bottom-color: var(--color-brand);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-copy {
+    break-after: page;
+    border: none !important;
+  }
+  .print-copy:last-child {
+    break-after: auto;
+  }
 }

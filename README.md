@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# אפליקציית ליקוט עצמאית
 
-## Getting Started
+אפליקציה עצמאית לחלוטין (Next.js + Neon + Vercel) — לא תלויה בוורדפרס. משמשת לליקוט הזמנות (בין אם מקושר להזמנת וורדפרס שמודפסת כרפרנס, ובין אם ליקוט עצמאי), ניהול קטלוג מוצרים, מחירון, והדפסת תעודות.
 
-First, run the development server:
+## שלב 1 — הקמת מסד הנתונים (Neon)
+
+1. להיכנס ל-[neon.tech](https://neon.tech) → לפתוח פרויקט חדש (או להשתמש בקיים).
+2. להעתיק את מחרוזת החיבור (**Connection string**) — נראית כך: `postgres://user:pass@ep-xxxx.neon.tech/dbname?sslmode=require`.
+
+## שלב 2 — הגדרת קובץ הסביבה המקומי
+
+בתיקיית הפרויקט, ליצור קובץ `.env.local` (אם לא קיים) עם:
+
+```
+DATABASE_URL=postgres://... (המחרוזת מ-Neon)
+SESSION_SECRET=מחרוזת אקראית וארוכה — לפחות 32 תווים
+```
+
+💡 את `SESSION_SECRET` אפשר לייצר בקלות עם הפקודה (בטרמינל):
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+## שלב 3 — יצירת הטבלאות + שמירת ביטוי הכניסה
+
+מריצים פעם אחת (מהתיקייה הראשית של הפרויקט):
+
+```bash
+npm install
+node scripts/setup-db.mjs "הביטוי-הסודי-שלך"
+```
+
+זה יוצר את כל הטבלאות ב-Neon, ושומר את ביטוי הכניסה **כ-hash מוצפן בלבד** — לא כטקסט גלוי.
+
+> לשינוי הביטוי בעתיד: פשוט מריצים שוב את אותה פקודה עם הביטוי החדש.
+
+## שלב 4 — בדיקה מקומית (לא חובה, אבל מומלץ)
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+לפתוח [http://localhost:3000](http://localhost:3000), להתחבר עם הביטוי, ולוודא שהכל עובד (הוספת מוצר, בניית תעודה, הדפסה).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## שלב 5 — פריסה ל-Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### אפשרות א' — עם Vercel CLI (הכי מהיר)
 
-## Learn More
+```bash
+npm install -g vercel
+vercel
+```
 
-To learn more about Next.js, take a look at the following resources:
+לעקוב אחרי ההנחיות (התחברות לחשבון Vercel, בחירת הפרויקט). בסיום, Vercel ייתן קישור לאתר החי.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### אפשרות ב' — דרך GitHub
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. להעלות את התיקייה הזו לריפו חדש ב-GitHub.
+2. ב-[vercel.com](https://vercel.com) → **Add New → Project** → לבחור את הריפו.
+3. Vercel יזהה אוטומטית שזה פרויקט Next.js.
 
-## Deploy on Vercel
+### הגדרת משתני הסביבה ב-Vercel (חובה!)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+בהגדרות הפרויקט ב-Vercel → **Settings → Environment Variables**, להוסיף:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| שם | ערך |
+|---|---|
+| `DATABASE_URL` | אותה מחרוזת חיבור מ-Neon (שלב 1) |
+| `SESSION_SECRET` | אותה מחרוזת מ-שלב 2 |
+
+לאחר ההוספה — **Deploy** (או **Redeploy** אם כבר נפרס).
+
+## שלב 6 — התקנה על טאבלט/טלפון (PWA)
+
+1. לפתוח את כתובת האתר (מ-Vercel) בדפדפן של הטלפון/טאבלט (Chrome מומלץ).
+2. תפריט הדפדפן → **"הוספה למסך הבית"** (Add to Home Screen).
+3. האפליקציה תופיע כמו אפליקציה רגילה, עם אייקון.
+
+## מבנה הפרויקט (למי שממשיך לפתח)
+
+- `app/` — כל המסכים (Next.js App Router)
+- `app/api/` — נקודות הקצה בצד שרת
+- `lib/db.ts` — חיבור ל-Neon
+- `lib/auth.ts` — אימות ביטוי + סשן + נעילה אחרי כשלונות
+- `lib/types.ts` — טיפוסים משותפים + לוגיקת תמחור (`computeItemPrice`)
+- `components/` — רכיבים משותפים (כותרת, חלון עריכת פריט, טופס מוצר)
+- `db/schema.sql` — סכימת מסד הנתונים
+- `scripts/setup-db.mjs` — הגדרה חד-פעמית (טבלאות + ביטוי כניסה)
+- `proxy.ts` — שער הרשאות (חוסם גישה בלי התחברות; ב-Next.js 16 זה מחליף את `middleware.ts` הישן)
+
+## פיתוח עתידי — פיצ'רים שלא נכללו בסבב הראשון
+
+- עריכת ביטוי הכניסה דרך מסך בתוך האפליקציה (כרגע רק דרך `scripts/setup-db.mjs`)
+- התחברות אישית לכל עובד/ת (כרגע ביטוי משותף אחד לכולם)
