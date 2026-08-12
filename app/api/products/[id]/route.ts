@@ -20,6 +20,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   const sku = body.sku ? String(body.sku).trim() : null;
   const category = body.category ? String(body.category).trim() : null;
+  const categoryId = body.category_id ? Number(body.category_id) : null;
   const image_url = body.image_url ? String(body.image_url).trim() : null;
   const unit = "unit"; // legacy
   const price = Number(body.price) || 0;
@@ -35,7 +36,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   const rows = await sql`
     UPDATE products
-    SET name = ${name}, sku = ${sku}, category = ${category}, image_url = ${image_url},
+    SET name = ${name}, sku = ${sku}, category = ${category}, category_id = ${categoryId}, image_url = ${image_url},
         unit = ${unit}, price = ${price}, pricing_type = ${pricingType}, sale_price = ${salePrice},
         is_on_sale = ${isOnSale}, sold_by_weight = ${soldByWeight}, requires_cleaning = ${requiresCleaning},
         unit_weight = ${unitWeight}, package_description = ${packageDescription},

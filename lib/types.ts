@@ -1,11 +1,21 @@
 export type ProductUnit = "unit" | "kg";
 export type PricingType = "unit" | "weight" | "package";
 
+export interface Category {
+  id: number;
+  name: string;
+  icon_url: string | null;
+  color: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Product {
   id: number;
   name: string;
   sku: string | null;
-  category: string | null;
+  category: string | null; // legacy
+  category_id: number | null; // קטגוריה חדשה
   image_url: string | null;
   unit: ProductUnit; // legacy
   price: number; // מחיר רגיל
@@ -157,7 +167,14 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     unit_weight: row.unit_weight == null ? null : Number(row.unit_weight),
     package_estimated_weight_min: row.package_estimated_weight_min == null ? null : Number(row.package_estimated_weight_min),
     package_estimated_weight_max: row.package_estimated_weight_max == null ? null : Number(row.package_estimated_weight_max),
+    category_id: row.category_id == null ? null : Number(row.category_id),
   } as Product;
+}
+
+export function normalizeCategory(row: Record<string, unknown>): Category {
+  return {
+    ...row,
+  } as Category;
 }
 
 export function normalizeSlip(row: Record<string, unknown>): Slip {

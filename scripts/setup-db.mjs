@@ -77,6 +77,7 @@ async function main() {
   const migrationsDir = path.join(root, "db");
   const migrationFiles = [
     "migration-001.sql",
+    "migration-002.sql",
   ];
   for (const migrationFile of migrationFiles) {
     const migrationPath = path.join(migrationsDir, migrationFile);

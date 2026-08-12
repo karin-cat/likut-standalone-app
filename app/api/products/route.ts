@@ -36,6 +36,7 @@ export async function POST(request: Request) {
 
   const sku = body.sku ? String(body.sku).trim() : null;
   const category = body.category ? String(body.category).trim() : null;
+  const categoryId = body.category_id ? Number(body.category_id) : null;
   const image_url = body.image_url ? String(body.image_url).trim() : null;
   const unit = "unit"; // legacy
   const price = Number(body.price) || 0;
@@ -51,12 +52,12 @@ export async function POST(request: Request) {
 
   const rows = await sql`
     INSERT INTO products (
-      name, sku, category, image_url, unit, price, pricing_type, sale_price, is_on_sale,
+      name, sku, category, category_id, image_url, unit, price, pricing_type, sale_price, is_on_sale,
       sold_by_weight, requires_cleaning, unit_weight, package_description,
       package_estimated_weight_min, package_estimated_weight_max
     )
     VALUES (
-      ${name}, ${sku}, ${category}, ${image_url}, ${unit}, ${price}, ${pricingType}, ${salePrice}, ${isOnSale},
+      ${name}, ${sku}, ${category}, ${categoryId}, ${image_url}, ${unit}, ${price}, ${pricingType}, ${salePrice}, ${isOnSale},
       ${soldByWeight}, ${requiresCleaning}, ${unitWeight}, ${packageDescription},
       ${packageWeightMin}, ${packageWeightMax}
     )
