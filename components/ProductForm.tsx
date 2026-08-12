@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Product, PricingType } from "@/lib/types";
+import type { Product, PricingType, Category } from "@/lib/types";
 
 export interface ProductFormValues {
   name: string;
   sku: string;
   category: string;
+  categoryId: string;
   imageUrl: string;
   pricingType: PricingType;
   price: string;
@@ -25,6 +26,7 @@ function toFormValues(p?: Product): ProductFormValues {
     name: p?.name || "",
     sku: p?.sku || "",
     category: p?.category || "",
+    categoryId: p?.category_id ? String(p.category_id) : "",
     imageUrl: p?.image_url || "",
     pricingType: p?.pricing_type || "unit",
     price: p != null ? String(p.price) : "",
@@ -44,6 +46,18 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        setCategories(Array.isArray(data) ? data : []);
+        setLoadingCategories(false);
+      })
+      .catch(() => setLoadingCategories(false));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,6 +71,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
         name: values.name,
         sku: values.sku || null,
         category: values.category || null,
+        category_id: values.categoryId ? parseInt(values.categoryId) : null,
         image_url: values.imageUrl || null,
         unit: "unit", // legacy, not used
         price,
@@ -117,11 +132,34 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
 
       <label className="flex flex-col gap-1">
         <span className="text-sm text-[var(--color-text-muted)]">קטגוריה</span>
-        <input
+        <select
           className="field-underline"
-          value={values.category}
-          onChange={(e) => setValues({ ...values, category: e.target.value })}
-        />
+          value={values.categoryId}
+          onChange={(e) => {
+            const selectedId = e.target.value;
+            const selected = categories.find((c) => String(c.id) === selectedId);
+            setValues({
+              ...values,
+              categoryId: selectedId,
+              category: selected?.name || "",
+            });
+          }}
+          disabled={loadingCategories}
+        >
+          <option value="">בחר קטגוריה...</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={String(cat.id)}>
+              {cat.icon_url ? `${cat.icon_url} ` : ""}
+              {cat.name}
+            </option>
+          ))}
+        </select>
+        {loadingCategories && <div className="text-xs text-[var(--color-text-muted)]">טוען קטגוריות...</div>}
+        <div className="text-xs text-blue-600 font-bold">
+          <a href="/categories" target="_blank" rel="noopener noreferrer">
+            ➕ הוסף קטגוריה חדשה
+          </a>
+        </div>
       </label>
 
       <label className="flex flex-col gap-1">

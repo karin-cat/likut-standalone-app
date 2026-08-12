@@ -2,8 +2,9 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/pos", label: "🧺 תעודה חדשה", desc: "ליקוט הזמנה קיימת / ליקוט עצמאי" },
+  { href: "/categories", label: "🏷️ ניהול קטגוריות", desc: "הוספה, עריכה, מחיקה" },
   { href: "/products", label: "📦 ניהול מוצרים", desc: "הוספה, עריכה, ייבוא מקובץ" },
-  { href: "/pricelist", label: "🏷️ מחירון", desc: "תצוגה, הדפסה וייצוא" },
+  { href: "/pricelist", label: "💰 מחירון", desc: "תצוגה, הדפסה וייצוא" },
   { href: "/slips", label: "📜 היסטוריית תעודות", desc: "צפייה והדפסה חוזרת" },
 ];
 

@@ -174,6 +174,7 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
 export function normalizeCategory(row: Record<string, unknown>): Category {
   return {
     ...row,
+    id: Number(row.id),
   } as Category;
 }
 
