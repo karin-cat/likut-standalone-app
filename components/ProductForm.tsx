@@ -8,6 +8,7 @@ export interface ProductFormValues {
   name: string;
   sku: string;
   category: string;
+  imageUrl: string;
   pricingType: PricingType;
   price: string;
   salePrice: string;
@@ -24,6 +25,7 @@ function toFormValues(p?: Product): ProductFormValues {
     name: p?.name || "",
     sku: p?.sku || "",
     category: p?.category || "",
+    imageUrl: p?.image_url || "",
     pricingType: p?.pricing_type || "unit",
     price: p != null ? String(p.price) : "",
     salePrice: p?.sale_price != null ? String(p.sale_price) : "",
@@ -55,6 +57,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
         name: values.name,
         sku: values.sku || null,
         category: values.category || null,
+        image_url: values.imageUrl || null,
         unit: "unit", // legacy, not used
         price,
         pricing_type: values.pricingType,
@@ -119,6 +122,26 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
           value={values.category}
           onChange={(e) => setValues({ ...values, category: e.target.value })}
         />
+      </label>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-sm text-[var(--color-text-muted)]">תמונה - URL (אופציונלי)</span>
+        <input
+          className="field-underline"
+          placeholder="https://example.com/image.jpg"
+          value={values.imageUrl}
+          onChange={(e) => setValues({ ...values, imageUrl: e.target.value })}
+        />
+        {values.imageUrl && (
+          <img
+            src={values.imageUrl}
+            alt={values.name}
+            className="mt-2 max-w-xs max-h-48 rounded"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
       </label>
 
       <label className="flex flex-col gap-2">

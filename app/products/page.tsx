@@ -66,9 +66,19 @@ export default function ProductsPage() {
             <Link
               key={p.id}
               href={`/products/${p.id}`}
-              className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-white"
+              className="flex items-center gap-3 px-4 py-3 border-b border-[var(--color-border)] bg-white"
             >
-              <div className="min-w-0">
+              {p.image_url && (
+                <img
+                  src={p.image_url}
+                  alt={p.name}
+                  className="w-12 h-12 object-cover rounded shrink-0"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              )}
+              <div className="min-w-0 flex-1">
                 <div className="font-semibold truncate">
                   {p.name}
                   {p.requires_cleaning && <span className="text-amber-600"> ⚠️</span>}
