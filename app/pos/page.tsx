@@ -144,7 +144,7 @@ function StartScreen({
   );
 }
 
-// ── מסך בחירת לקוח — אחרי סיום הליקוט ──────────────────────────
+// ── מסך סיום — בחירת לקוח + פרטים נוספים ──────────────────────────
 function FinishScreen({
   meta,
   setMeta,
@@ -155,6 +155,7 @@ function FinishScreen({
   onSave: () => void;
 }) {
   const [customerType, setCustomerType] = useState<"general" | "specific" | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const isComplete = customerType === "general" || (
     customerType === "specific" &&
@@ -165,113 +166,195 @@ function FinishScreen({
     meta.customer_address_city
   );
 
+  async function handleSave() {
+    setSaving(true);
+    await onSave();
+    setSaving(false);
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-4 pb-28">
-      <div className="font-bold text-lg mb-4">👤 בחר סוג לקוח</div>
+      {/* ── סקציה 1: בחירת סוג לקוח ──────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="font-bold text-lg mb-4">👤 בחר סוג לקוח</div>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => setCustomerType("general")}
+            className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
+              customerType === "general"
+                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
+            }`}
+          >
+            👥 לקוח כללי
+            <div className="text-xs font-normal text-current opacity-75 mt-1">
+              {customerType === "general" ? "ללא שם ספציפי" : "ללא פרטים נוספים"}
+            </div>
+          </button>
 
-      <div className="flex flex-col gap-3 mb-6">
-        <button
-          type="button"
-          onClick={() => setCustomerType("general")}
-          className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
-            customerType === "general"
-              ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
-              : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
-          }`}
-        >
-          👥 לקוח כללי
-          <div className="text-xs font-normal text-current opacity-75 mt-1">
-            {customerType === "general" ? "ללא שם ספציפי" : "ללא פרטים נוספים"}
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setCustomerType("specific")}
-          className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
-            customerType === "specific"
-              ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
-              : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
-          }`}
-        >
-          👤 לקוח ספציפי
-          <div className="text-xs font-normal text-current opacity-75 mt-1">
-            {customerType === "specific" ? "עם פרטים מלאים" : "שם, טלפון, כתובת וכו'"}
-          </div>
-        </button>
+          <button
+            type="button"
+            onClick={() => setCustomerType("specific")}
+            className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
+              customerType === "specific"
+                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
+            }`}
+          >
+            👤 לקוח ספציפי
+            <div className="text-xs font-normal text-current opacity-75 mt-1">
+              {customerType === "specific" ? "עם פרטים מלאים" : "שם, טלפון, כתובת וכו'"}
+            </div>
+          </button>
+        </div>
       </div>
 
+      {/* ── סקציה 2: פרטי לקוח (אם ספציפי) ──────────────────────────── */}
       {customerType === "specific" && (
-        <div className="flex flex-col gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">שם לקוח *</span>
-            <input
-              className="field-underline"
-              inputMode="text"
-              placeholder="שם מלא"
-              value={meta.customer_name}
-              onChange={(e) => setMeta({ ...meta, customer_name: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">📞 טלפון לקוח *</span>
-            <input
-              className="field-underline"
-              inputMode="tel"
-              placeholder="054-1234567"
-              value={meta.customer_phone}
-              onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">📧 מייל לקוח *</span>
-            <input
-              className="field-underline"
-              inputMode="email"
-              placeholder="customer@example.com"
-              value={meta.customer_email}
-              onChange={(e) => setMeta({ ...meta, customer_email: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב ומספר *</span>
-            <input
-              className="field-underline"
-              inputMode="text"
-              placeholder="רחוב שטרן 15"
-              value={meta.customer_address_street}
-              onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">🏙️ עיר *</span>
-            <input
-              className="field-underline"
-              inputMode="text"
-              placeholder="ירושלים"
-              value={meta.customer_address_city}
-              onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
-            />
-          </label>
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="font-bold text-sm mb-4">👤 פרטי לקוח</div>
+          <div className="flex flex-col gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-[var(--color-text-muted)]">שם לקוח *</span>
+              <input
+                className="field-underline"
+                inputMode="text"
+                placeholder="שם מלא"
+                value={meta.customer_name}
+                onChange={(e) => setMeta({ ...meta, customer_name: e.target.value })}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-[var(--color-text-muted)]">📞 טלפון לקוח *</span>
+              <input
+                className="field-underline"
+                inputMode="tel"
+                placeholder="054-1234567"
+                value={meta.customer_phone}
+                onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-[var(--color-text-muted)]">📧 מייל לקוח *</span>
+              <input
+                className="field-underline"
+                inputMode="email"
+                placeholder="customer@example.com"
+                value={meta.customer_email}
+                onChange={(e) => setMeta({ ...meta, customer_email: e.target.value })}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב ומספר *</span>
+              <input
+                className="field-underline"
+                inputMode="text"
+                placeholder="רחוב שטרן 15"
+                value={meta.customer_address_street}
+                onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-[var(--color-text-muted)]">🏙️ עיר *</span>
+              <input
+                className="field-underline"
+                inputMode="text"
+                placeholder="ירושלים"
+                value={meta.customer_address_city}
+                onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
+              />
+            </label>
+          </div>
         </div>
       )}
 
-      <div className="text-xs text-[var(--color-text-muted)] bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-        💡 <strong>טיפ:</strong> שאר הפרטים (משלוח, תאריך אספקה וכו') ניתן להוסיף בתעודה המודפסת.
+      {/* ── סקציה 3: פרטי משלוח וטיפול ──────────────────────────────── */}
+      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="font-bold text-sm mb-4">🚚 משלוח וטיפול</div>
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">שיטת משלוח</span>
+            <select
+              className="field-underline"
+              value={meta.shipping_method}
+              onChange={(e) => setMeta({ ...meta, shipping_method: e.target.value })}
+            >
+              <option value="">בחר שיטת משלוח...</option>
+              <option value="איסוף עצמי">איסוף עצמי</option>
+              <option value="משלוח עד הבית">משלוח עד הבית</option>
+              <option value="אחר">אחר</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">📅 תאריך אספקה</span>
+            <input
+              type="date"
+              className="field-underline"
+              value={meta.delivery_date}
+              onChange={(e) => setMeta({ ...meta, delivery_date: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">💵 עלות משלוח (₪)</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              className="field-underline"
+              value={meta.shipping_cost}
+              onChange={(e) => setMeta({ ...meta, shipping_cost: e.target.value })}
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* ── סקציה 4: סכום הזמנה מקורי + הערות ──────────────────────── */}
+      <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="font-bold text-sm mb-4">💰 סכום ועיבוד</div>
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)] font-bold">סכום הזמנה מקורי (₪)</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              className="field-underline"
+              placeholder="כולל משלוח"
+              value={meta.original_total}
+              onChange={(e) => setMeta({ ...meta, original_total: e.target.value })}
+            />
+            <span className="text-xs text-[var(--color-text-muted)]">
+              ⚠️ הסכום צריך <strong>לכלול את עלות המשלוח</strong>
+            </span>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">💬 הערות כלליות</span>
+            <input
+              className="field-underline"
+              inputMode="text"
+              placeholder="לדוגמה: חלק מהמוצרים יגיע שבועות הבאות"
+              value={meta.note}
+              onChange={(e) => setMeta({ ...meta, note: e.target.value })}
+            />
+          </label>
+        </div>
       </div>
 
       <div className="fixed bottom-0 inset-x-0 bg-white border-t border-[var(--color-border)] p-3">
         <button
           type="button"
-          onClick={onSave}
-          disabled={!isComplete}
+          onClick={handleSave}
+          disabled={!isComplete || saving}
           className={`w-full rounded-xl font-bold py-3 text-lg transition-all ${
-            isComplete
+            isComplete && !saving
               ? "bg-[var(--color-brand)] text-white"
               : "bg-[var(--color-bg-soft)] text-[var(--color-text-muted)] cursor-not-allowed"
           }`}
         >
-          ✓ סיים ליקוט
+          {saving ? "שומר/ת..." : "✓ סיים ליקוט + הדפסה"}
         </button>
       </div>
     </div>
