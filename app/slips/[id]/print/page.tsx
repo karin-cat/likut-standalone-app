@@ -96,9 +96,14 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                         {it.clean_weight != null && <div>🧽 אחרי ניקוי: {fmtQty(Number(it.clean_weight), "kg")}</div>}
                       </div>
                     )}
-                    {!it.requires_cleaning && it.unit !== "unit" && it.ordered_weight != null && slip.mode === "linked" && (
+                    {!it.requires_cleaning && it.unit !== "unit" && it.ordered_weight != null && (
                       <div className="text-xs text-[var(--color-text-muted)]">
                         📋 הוזמן: {fmtQty(Number(it.ordered_weight), "kg")}
+                      </div>
+                    )}
+                    {!it.requires_cleaning && it.unit === "unit" && it.ordered_weight != null && (
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        📋 הוזמן: {fmtQty(Number(it.ordered_weight), "unit")}
                       </div>
                     )}
                   </>
