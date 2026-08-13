@@ -103,10 +103,14 @@ function StartScreen({
   meta,
   setMeta,
   onStart,
+  pendingDraft,
+  onResume,
 }: {
   meta: SlipDraftMeta;
   setMeta: (m: SlipDraftMeta) => void;
   onStart: () => void;
+  pendingDraft: Draft | null;
+  onResume: () => void;
 }) {
   const [showOrderForm, setShowOrderForm] = useState(meta.mode === "linked");
 
@@ -141,6 +145,21 @@ function StartScreen({
           🧺 ליקוט עצמאי
           <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">בלי הזמנה מקורית</div>
         </button>
+
+        {pendingDraft && (
+          <button
+            type="button"
+            onClick={onResume}
+            className="w-full max-w-xs rounded-2xl bg-[var(--color-brand)] text-white shadow-sm py-6 text-center font-bold text-lg active:opacity-90 mt-2"
+          >
+            ▶️ המשך תעודה קיימת
+            <div className="text-xs font-normal text-white/80 mt-1">
+              {pendingDraft.cart.length > 0
+                ? `נותרו ${pendingDraft.cart.length} פריטים בעגלה`
+                : "נמצאה תעודה שלא הושלמה"}
+            </div>
+          </button>
+        )}
       </div>
     );
   }
@@ -403,8 +422,8 @@ function FinishScreen({
 
 export default function PosPage() {
   const router = useRouter();
-  const [phase, setPhase] = useState<Phase>(() => loadDraft()?.phase || "start");
-  const [meta, setMeta] = useState<SlipDraftMeta>(() => loadDraft()?.meta || emptySlipDraftMeta());
+  const [phase, setPhase] = useState<Phase>("start");
+  const [meta, setMeta] = useState<SlipDraftMeta>(emptySlipDraftMeta());
 
   const [tab, setTab] = useState<Tab>("catalog");
   const [products, setProducts] = useState<Product[]>([]);
@@ -412,17 +431,41 @@ export default function PosPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
 
-  const [cart, setCart] = useState<CartItem[]>(() => loadDraft()?.cart || []);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [editing, setEditing] = useState<{ index: number | null; item: CartItem } | null>(null);
   const [keypadFlow, setKeypadFlow] = useState<{ item: CartItem; stage: "primary" | "clean" } | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // שמירה אוטומטית של הטיוטה בכל שינוי — כך שרענון בטעות לא ימחק את הליקוט
+  // בכניסה למסך — בודקים אם קיימת טיוטה שמורה, ומציעים "המשך תעודה קיימת" (במקום לקפוץ אליה ישירות)
+  const [pendingDraft, setPendingDraft] = useState<Draft | null>(null);
+  const [draftChecked, setDraftChecked] = useState(false);
+
   useEffect(() => {
+    // בדיקת localStorage חד-פעמית בעליית הרכיב — לא לולאת רינדור אמיתית.
+    const d = loadDraft();
+    if (d && (d.phase !== "start" || d.cart.length > 0)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPendingDraft(d);
+    }
+    setDraftChecked(true);
+  }, []);
+
+  // שמירה אוטומטית של הטיוטה בכל שינוי — כך שרענון בטעות לא ימחק את הליקוט
+  // (לא שומרים כל עוד יש הצעת "המשך תעודה קיימת" שלא טופלה, כדי לא לדרוס אותה)
+  useEffect(() => {
+    if (!draftChecked || pendingDraft) return;
     saveDraft({ phase, meta, cart });
-  }, [phase, meta, cart]);
+  }, [phase, meta, cart, draftChecked, pendingDraft]);
+
+  function resumeDraft() {
+    if (!pendingDraft) return;
+    setPhase(pendingDraft.phase === "start" ? "working" : pendingDraft.phase);
+    setMeta(pendingDraft.meta);
+    setCart(pendingDraft.cart);
+    setPendingDraft(null);
+  }
 
   function resetDraft() {
     if (!window.confirm("לבטל את התעודה הנוכחית ולהתחיל מחדש? כל הפריטים שנוספו יימחקו.")) return;
@@ -434,6 +477,7 @@ export default function PosPage() {
     setEditing(null);
     setKeypadFlow(null);
     setSaveError(null);
+    setPendingDraft(null);
   }
 
   useEffect(() => {
@@ -583,7 +627,16 @@ export default function PosPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <AppHeader title="תעודה חדשה" backHref="/" />
-        <StartScreen meta={meta} setMeta={setMeta} onStart={() => setPhase("working")} />
+        <StartScreen
+          meta={meta}
+          setMeta={setMeta}
+          onStart={() => {
+            setPendingDraft(null);
+            setPhase("working");
+          }}
+          pendingDraft={pendingDraft}
+          onResume={resumeDraft}
+        />
       </div>
     );
   }
