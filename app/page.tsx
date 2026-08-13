@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const LINKS = [
   { href: "/pos", label: "🧺 תעודה חדשה", desc: "ליקוט הזמנה קיימת / ליקוט עצמאי" },
@@ -12,10 +13,16 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="bg-[var(--color-brand)] text-white text-center py-8">
-        <div className="mx-auto mb-2 h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl font-bold">
-          ל
+        <div className="mx-auto mb-4 flex justify-center">
+          <Image
+            src="/logo4app.png"
+            alt="ליקוט by DC"
+            width={200}
+            height={200}
+            className="w-48 h-auto"
+            priority
+          />
         </div>
-        <h1 className="text-xl font-bold">אפליקציית ליקוט</h1>
       </div>
 
       <div className="flex-1 p-4 flex flex-col gap-3 max-w-sm w-full mx-auto">
