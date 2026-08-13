@@ -148,7 +148,7 @@ function StartScreen({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב וביתי</span>
+          <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב ומספר</span>
           <input
             className="field-underline"
             inputMode="text"
@@ -168,14 +168,15 @@ function StartScreen({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">📍 כתובת (מלאה - legacy)</span>
+          <span className="text-sm text-[var(--color-text-muted)]">📍 כתובת מלאה (אם קיימת בהזמנה המקורית)</span>
           <input
             className="field-underline"
             inputMode="text"
+            placeholder="למשל: רחוב שטרן 15, ירושלים"
             value={meta.customer_address}
             onChange={(e) => setMeta({ ...meta, customer_address: e.target.value })}
           />
-          <span className="text-xs text-[var(--color-text-muted)]">אם יש הזמנה מקורית עם כתובת מלאה</span>
+          <span className="text-xs text-[var(--color-text-muted)]">אופציונלי - במקום רחוב + עיר נפרדים</span>
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-sm text-[var(--color-text-muted)]">🚚 שיטת משלוח</span>
