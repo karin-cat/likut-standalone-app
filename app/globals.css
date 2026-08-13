@@ -41,15 +41,41 @@ body {
   width: 100%;
   border: none;
   border-bottom: 1px solid var(--color-border);
-  background: transparent;
-  padding: 10px 2px;
+  background: rgba(245, 247, 245, 0.5);
+  padding: 12px 8px;
   font-size: 16px;
   outline: none;
   font-family: inherit;
+  border-radius: 4px 4px 0 0;
+  transition: background-color 0.2s ease;
 }
 .field-underline:focus,
 .field-underline select:focus {
   border-bottom-color: var(--color-brand);
+  background: var(--color-bg);
+}
+
+/* Label - משקל חזק יותר */
+label span:first-child {
+  font-weight: 500;
+}
+
+/* Helper text / הסבר - משקל חלש יותר וצבע בהיר */
+.field-hint,
+label span.text-xs {
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 0.875em;
+  display: block;
+  margin-top: 4px;
+}
+
+/* מרווחים בין שדות */
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
 }
 
 @media print {
