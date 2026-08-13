@@ -161,49 +161,69 @@ export default function ItemEditModal({
               </div>
             )}
 
-            {item.requires_cleaning ? (
+            {isWeight ? (
               <>
                 <label className="flex flex-col gap-1 mb-3">
-                  <span className="text-sm text-[var(--color-text-muted)]">משקל שהוזמן (ק"ג) — למידע בלבד</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    className="field-underline bg-gray-100"
-                    value={orderedWeight}
-                    onChange={(e) => setOrderedWeight(e.target.value)}
-                    placeholder="יוזן אוטומטית מהתעודה"
-                  />
-                </label>
-
-                <label className="flex flex-col gap-1 mb-3">
-                  <span className="text-sm text-[var(--color-text-muted)] font-bold">משקל בפועל ולחיוב (ק"ג) — לחישוב מחיר</span>
+                  <span className="text-sm text-[var(--color-text-muted)]">📦 כמה הוזמן (ק"ג) — למראה בתעודה</span>
                   <input
                     type="number"
                     inputMode="decimal"
                     step="0.01"
                     min="0"
                     className="field-underline"
-                    value={actualWeightForBilling}
-                    onChange={(e) => setActualWeightForBilling(e.target.value)}
-                    placeholder="זה משמש לחישוב מחיר"
+                    value={orderedWeight}
+                    onChange={(e) => setOrderedWeight(e.target.value)}
+                    placeholder="למשל: 6"
                   />
+                  <span className="text-xs text-[var(--color-text-muted)]">יוצג בתעודה כ: "הוזמן X, בפועל Y"</span>
                 </label>
+
+                {item.requires_cleaning ? (
+                  <>
+                    <label className="flex flex-col gap-1 mb-3">
+                      <span className="text-sm text-[var(--color-text-muted)] font-bold">⚖️ משקל בפועל ולחיוב (ק"ג) — לחישוב מחיר</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        className="field-underline"
+                        value={actualWeightForBilling}
+                        onChange={(e) => setActualWeightForBilling(e.target.value)}
+                        placeholder="למשל: 5"
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <label className="flex flex-col gap-1 mb-3">
+                    <span className="text-sm text-[var(--color-text-muted)]">⚖️ משקל בפועל (ק"ג)</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      className="field-underline"
+                      value={qty}
+                      onChange={(e) => setQty(e.target.value)}
+                      placeholder="למשל: 5"
+                    />
+                  </label>
+                )}
               </>
             ) : (
               <label className="flex flex-col gap-1 mb-3">
                 <span className="text-sm text-[var(--color-text-muted)]">
-                  {isWeight ? 'משקל (ק"ג)' : "כמות"}
+                  📦 כמות {item.requires_cleaning ? "(הוזמן)" : ""}
                 </span>
                 <input
                   type="number"
                   inputMode="decimal"
-                  step={isWeight ? "0.01" : "1"}
+                  step="1"
                   min="0"
                   className="field-underline"
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
+                  placeholder="למשל: 3"
                 />
               </label>
             )}
