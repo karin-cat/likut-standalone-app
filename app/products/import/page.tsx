@@ -10,7 +10,25 @@ const FIELD_GUESSES: Record<string, string[]> = {
   sku: ["sku", "מק\"ט", "מקט"],
   category: ["category", "categories", "קטגוריה", "קטגוריות"],
   price: ["price", "regular price", "מחיר", "מחיר רגיל"],
+  sale_price: ["sale price", "מחיר מבצע", "מחיר מבצע (₪)"],
+  image_url: ["images", "image", "image url", "תמונות", "תמונה", "קישור לתמונה"],
+  description: ["description", "תיאור"],
+  notes: ["notes", "הערות"],
 };
+
+const FIELD_LABELS: Record<ImportField, string> = {
+  name: "שם מוצר (חובה)",
+  sku: 'מק"ט',
+  category: "קטגוריה",
+  price: "מחיר",
+  sale_price: "מחיר מבצע",
+  image_url: "קישור לתמונה",
+  description: "תיאור",
+  notes: "הערות",
+};
+
+type ImportField = "name" | "sku" | "category" | "price" | "sale_price" | "image_url" | "description" | "notes";
+const IMPORT_FIELDS: ImportField[] = ["name", "sku", "category", "price", "sale_price", "image_url", "description", "notes"];
 
 function guessColumn(headers: string[], field: string): number {
   const candidates = FIELD_GUESSES[field] || [];
@@ -26,11 +44,15 @@ export default function ImportProductsPage() {
   const router = useRouter();
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<string[][]>([]);
-  const [mapping, setMapping] = useState<{ name: number; sku: number; category: number; price: number }>({
+  const [mapping, setMapping] = useState<Record<ImportField, number>>({
     name: -1,
     sku: -1,
     category: -1,
     price: -1,
+    sale_price: -1,
+    image_url: -1,
+    description: -1,
+    notes: -1,
   });
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -57,6 +79,10 @@ export default function ImportProductsPage() {
         sku: guessColumn(hdrs, "sku"),
         category: guessColumn(hdrs, "category"),
         price: guessColumn(hdrs, "price"),
+        sale_price: guessColumn(hdrs, "sale_price"),
+        image_url: guessColumn(hdrs, "image_url"),
+        description: guessColumn(hdrs, "description"),
+        notes: guessColumn(hdrs, "notes"),
       });
     };
     reader.readAsText(file, "utf-8");
@@ -69,6 +95,8 @@ export default function ImportProductsPage() {
       sku: mapping.sku !== -1 ? r[mapping.sku] || "" : "",
       category: mapping.category !== -1 ? r[mapping.category] || "" : "",
       price: mapping.price !== -1 ? r[mapping.price] || "" : "",
+      sale_price: mapping.sale_price !== -1 ? r[mapping.sale_price] || "" : "",
+      image_url: mapping.image_url !== -1 ? r[mapping.image_url] || "" : "",
     }));
   }, [rows, mapping]);
 
@@ -79,12 +107,21 @@ export default function ImportProductsPage() {
     }
     setImporting(true);
     setError(null);
-    const importRows = rows.map((r) => ({
-      name: r[mapping.name] || "",
-      sku: mapping.sku !== -1 ? r[mapping.sku] || "" : "",
-      category: mapping.category !== -1 ? r[mapping.category] || "" : "",
-      price: mapping.price !== -1 ? parseFloat((r[mapping.price] || "0").replace(/[^\d.]/g, "")) || 0 : 0,
-    }));
+    const importRows = rows.map((r) => {
+      const salePriceRaw = mapping.sale_price !== -1 ? (r[mapping.sale_price] || "").trim() : "";
+      const salePrice = salePriceRaw ? parseFloat(salePriceRaw.replace(/[^\d.]/g, "")) || 0 : 0;
+      return {
+        name: r[mapping.name] || "",
+        sku: mapping.sku !== -1 ? r[mapping.sku] || "" : "",
+        category: mapping.category !== -1 ? r[mapping.category] || "" : "",
+        price: mapping.price !== -1 ? parseFloat((r[mapping.price] || "0").replace(/[^\d.]/g, "")) || 0 : 0,
+        sale_price: salePrice || undefined,
+        is_on_sale: !!salePrice,
+        image_url: mapping.image_url !== -1 ? (r[mapping.image_url] || "").split(",")[0].trim() : "",
+        description: mapping.description !== -1 ? r[mapping.description] || "" : "",
+        notes: mapping.notes !== -1 ? r[mapping.notes] || "" : "",
+      };
+    });
     try {
       const res = await fetch("/api/products/import", {
         method: "POST",
@@ -122,11 +159,9 @@ export default function ImportProductsPage() {
               נמצאו {rows.length} שורות. יש לוודא שהמיפוי נכון:
             </div>
 
-            {(["name", "sku", "category", "price"] as const).map((field) => (
+            {IMPORT_FIELDS.map((field) => (
               <label key={field} className="flex flex-col gap-1">
-                <span className="text-sm text-[var(--color-text-muted)]">
-                  {field === "name" ? "שם מוצר (חובה)" : field === "sku" ? 'מק"ט' : field === "category" ? "קטגוריה" : "מחיר"}
-                </span>
+                <span className="text-sm text-[var(--color-text-muted)]">{FIELD_LABELS[field]}</span>
                 <select
                   className="field-underline"
                   value={mapping[field]}
@@ -152,6 +187,8 @@ export default function ImportProductsPage() {
                       <th className="text-right py-1">מק&quot;ט</th>
                       <th className="text-right py-1">קטגוריה</th>
                       <th className="text-right py-1">מחיר</th>
+                      <th className="text-right py-1">מחיר מבצע</th>
+                      <th className="text-right py-1">תמונה</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -161,6 +198,8 @@ export default function ImportProductsPage() {
                         <td className="py-1">{r.sku}</td>
                         <td className="py-1">{r.category}</td>
                         <td className="py-1">{r.price}</td>
+                        <td className="py-1">{r.sale_price}</td>
+                        <td className="py-1 max-w-[120px] truncate">{r.image_url}</td>
                       </tr>
                     ))}
                   </tbody>
