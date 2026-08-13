@@ -13,7 +13,7 @@ function fmt(n: number): string {
   return "₪" + n.toFixed(2);
 }
 
-type Phase = "start" | "working";
+type Phase = "start" | "working" | "finish";
 type Tab = "catalog" | "cart";
 
 function productToCartItem(p: Product): CartItem {
@@ -58,7 +58,7 @@ function freeCartItem(): CartItem {
   };
 }
 
-// ── מסך פתיחה — בחירת מצב + (אם מקושר) פרטי הזמנה ──────────────────────────
+// ── מסך פתיחה — בחירת מצב + מספר הזמנה (אם מקושר) ──────────────────────────
 function StartScreen({
   meta,
   setMeta,
@@ -68,18 +68,18 @@ function StartScreen({
   setMeta: (m: SlipDraftMeta) => void;
   onStart: () => void;
 }) {
-  const [showLinkedForm, setShowLinkedForm] = useState(meta.mode === "linked");
+  const [showOrderForm, setShowOrderForm] = useState(meta.mode === "linked");
 
   function chooseMode(mode: "linked" | "standalone") {
     setMeta({ ...meta, mode });
     if (mode === "standalone") {
       onStart();
     } else {
-      setShowLinkedForm(true);
+      setShowOrderForm(true);
     }
   }
 
-  if (!showLinkedForm) {
+  if (!showOrderForm) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
         <div className="text-lg font-bold mb-2">איך מתחילים?</div>
@@ -90,7 +90,7 @@ function StartScreen({
         >
           📋 ליקוט הזמנה קיימת
           <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">
-            יש הזמנה מודפסת מוורדפרס
+            יש הזמנה מודפסת
           </div>
         </button>
         <button
@@ -107,148 +107,171 @@ function StartScreen({
 
   return (
     <div className="flex-1 overflow-y-auto p-4 pb-28">
-      <div className="font-bold text-lg mb-3">📋 פרטי ההזמנה הקיימת</div>
+      <div className="font-bold text-lg mb-3">📋 מספר הזמנה</div>
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-sm text-[var(--color-text-muted)]">מספר הזמנה</span>
           <input
             className="field-underline"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            placeholder="למשל: 1234"
             value={meta.order_number}
             onChange={(e) => setMeta({ ...meta, order_number: e.target.value })}
+            autoFocus
           />
+          <span className="text-xs text-[var(--color-text-muted)]">פרטי לקוח נוספים ישמרו אחרי הליקוט</span>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">שם לקוח</span>
-          <input
-            className="field-underline"
-            inputMode="text"
-            value={meta.customer_name}
-            onChange={(e) => setMeta({ ...meta, customer_name: e.target.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">📞 טלפון לקוח</span>
-          <input
-            className="field-underline"
-            inputMode="tel"
-            placeholder="למשל: 054-1234567"
-            value={meta.customer_phone}
-            onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">📧 מייל לקוח</span>
-          <input
-            className="field-underline"
-            inputMode="email"
-            placeholder="customer@example.com"
-            value={meta.customer_email}
-            onChange={(e) => setMeta({ ...meta, customer_email: e.target.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב ומספר</span>
-          <input
-            className="field-underline"
-            inputMode="text"
-            placeholder="למשל: רחוב שטרן 15"
-            value={meta.customer_address_street}
-            onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">🏙️ עיר</span>
-          <input
-            className="field-underline"
-            inputMode="text"
-            placeholder="למשל: ירושלים"
-            value={meta.customer_address_city}
-            onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">📍 כתובת מלאה (אם קיימת בהזמנה המקורית)</span>
-          <input
-            className="field-underline"
-            inputMode="text"
-            placeholder="למשל: רחוב שטרן 15, ירושלים"
-            value={meta.customer_address}
-            onChange={(e) => setMeta({ ...meta, customer_address: e.target.value })}
-          />
-          <span className="text-xs text-[var(--color-text-muted)]">אופציונלי - במקום רחוב + עיר נפרדים</span>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">🚚 שיטת משלוח</span>
-          <select
-            className="field-underline"
-            value={meta.shipping_method}
-            onChange={(e) => setMeta({ ...meta, shipping_method: e.target.value })}
-          >
-            <option value="">בחר שיטת משלוח...</option>
-            <option value="איסוף עצמי">איסוף עצמי</option>
-            <option value="משלוח עד הבית">משלוח עד הבית</option>
-            <option value="אחר">אחר</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">📅 תאריך אספקה</span>
-          <input
-            type="date"
-            className="field-underline"
-            value={meta.delivery_date}
-            onChange={(e) => setMeta({ ...meta, delivery_date: e.target.value })}
-          />
-          <span className="text-xs text-[var(--color-text-muted)]">פורמט: יום/חודש/שנה</span>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">💵 עלות משלוח (₪)</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            className="field-underline"
-            value={meta.shipping_cost}
-            onChange={(e) => setMeta({ ...meta, shipping_cost: e.target.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">💬 הערות כלליות</span>
-          <input
-            className="field-underline"
-            inputMode="text"
-            value={meta.note}
-            onChange={(e) => setMeta({ ...meta, note: e.target.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)] font-bold">
-            💰 סכום ההזמנה המקורי (₪)
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            className="field-underline"
-            placeholder="מהעתק ההזמנה המודפס"
-            value={meta.original_total}
-            onChange={(e) => setMeta({ ...meta, original_total: e.target.value })}
-          />
-          <span className="text-xs text-[var(--color-text-muted)]">
-            ⚠️ הסכום צריך <strong>לכלול את עלות המשלוח</strong>. ישמש בסוף הליקוט להשוואה מול הסכום בפועל.
-          </span>
-        </label>
+      </div>
+
+      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-[var(--color-border)] p-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setShowOrderForm(false)}
+          className="flex-1 rounded-xl border border-[var(--color-border)] font-bold py-3 text-lg"
+        >
+          ← חזור
+        </button>
+        <button
+          type="button"
+          onClick={onStart}
+          className="flex-1 rounded-xl bg-[var(--color-brand)] text-white font-bold py-3 text-lg"
+        >
+          התחל ليقوط →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── מסך בחירת לקוח — אחרי סיום הליקוט ──────────────────────────
+function FinishScreen({
+  meta,
+  setMeta,
+  onSave,
+}: {
+  meta: SlipDraftMeta;
+  setMeta: (m: SlipDraftMeta) => void;
+  onSave: () => void;
+}) {
+  const [customerType, setCustomerType] = useState<"general" | "specific" | null>(null);
+
+  const isComplete = customerType === "general" || (
+    customerType === "specific" &&
+    meta.customer_name &&
+    meta.customer_phone &&
+    meta.customer_email &&
+    meta.customer_address_street &&
+    meta.customer_address_city
+  );
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 pb-28">
+      <div className="font-bold text-lg mb-4">👤 בחר סוג לקוח</div>
+
+      <div className="flex flex-col gap-3 mb-6">
+        <button
+          type="button"
+          onClick={() => setCustomerType("general")}
+          className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
+            customerType === "general"
+              ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+              : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
+          }`}
+        >
+          👥 לקוח כללי
+          <div className="text-xs font-normal text-current opacity-75 mt-1">
+            {customerType === "general" ? "ללא שם ספציפי" : "ללא פרטים נוספים"}
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setCustomerType("specific")}
+          className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
+            customerType === "specific"
+              ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+              : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
+          }`}
+        >
+          👤 לקוח ספציפי
+          <div className="text-xs font-normal text-current opacity-75 mt-1">
+            {customerType === "specific" ? "עם פרטים מלאים" : "שם, טלפון, כתובת וכו'"}
+          </div>
+        </button>
+      </div>
+
+      {customerType === "specific" && (
+        <div className="flex flex-col gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">שם לקוח *</span>
+            <input
+              className="field-underline"
+              inputMode="text"
+              placeholder="שם מלא"
+              value={meta.customer_name}
+              onChange={(e) => setMeta({ ...meta, customer_name: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">📞 טלפון לקוח *</span>
+            <input
+              className="field-underline"
+              inputMode="tel"
+              placeholder="054-1234567"
+              value={meta.customer_phone}
+              onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">📧 מייל לקוח *</span>
+            <input
+              className="field-underline"
+              inputMode="email"
+              placeholder="customer@example.com"
+              value={meta.customer_email}
+              onChange={(e) => setMeta({ ...meta, customer_email: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב ומספר *</span>
+            <input
+              className="field-underline"
+              inputMode="text"
+              placeholder="רחוב שטרן 15"
+              value={meta.customer_address_street}
+              onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[var(--color-text-muted)]">🏙️ עיר *</span>
+            <input
+              className="field-underline"
+              inputMode="text"
+              placeholder="ירושלים"
+              value={meta.customer_address_city}
+              onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
+            />
+          </label>
+        </div>
+      )}
+
+      <div className="text-xs text-[var(--color-text-muted)] bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+        💡 <strong>טיפ:</strong> שאר הפרטים (משלוח, תאריך אספקה וכו') ניתן להוסיף בתעודה המודפסת.
       </div>
 
       <div className="fixed bottom-0 inset-x-0 bg-white border-t border-[var(--color-border)] p-3">
         <button
           type="button"
-          onClick={onStart}
-          className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold py-3 text-lg"
+          onClick={onSave}
+          disabled={!isComplete}
+          className={`w-full rounded-xl font-bold py-3 text-lg transition-all ${
+            isComplete
+              ? "bg-[var(--color-brand)] text-white"
+              : "bg-[var(--color-bg-soft)] text-[var(--color-text-muted)] cursor-not-allowed"
+          }`}
         >
-          התחל ליקוט →
+          ✓ סיים ליקוט
         </button>
       </div>
     </div>
@@ -390,6 +413,10 @@ export default function PosPage() {
           mode: meta.mode,
           order_number: meta.order_number || null,
           customer_name: meta.customer_name || null,
+          customer_phone: meta.customer_phone || null,
+          customer_email: meta.customer_email || null,
+          customer_address_street: meta.customer_address_street || null,
+          customer_address_city: meta.customer_address_city || null,
           customer_address: meta.customer_address || null,
           shipping_method: meta.shipping_method || null,
           delivery_date: meta.delivery_date || null,
@@ -416,6 +443,15 @@ export default function PosPage() {
       <div className="min-h-screen flex flex-col">
         <AppHeader title="תעודה חדשה" backHref="/" />
         <StartScreen meta={meta} setMeta={setMeta} onStart={() => setPhase("working")} />
+      </div>
+    );
+  }
+
+  if (phase === "finish") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <AppHeader title="סיום ליקוט" backHref="/pos" />
+        <FinishScreen meta={meta} setMeta={setMeta} onSave={handleSaveSlip} />
       </div>
     );
   }
@@ -605,11 +641,11 @@ export default function PosPage() {
             </div>
             <button
               type="button"
-              onClick={handleSaveSlip}
-              disabled={saving || cart.length === 0}
+              onClick={() => setPhase("finish")}
+              disabled={cart.length === 0}
               className="rounded-xl bg-[var(--color-brand)] text-white font-bold py-3 text-lg disabled:opacity-50"
             >
-              {saving ? "שומר/ת..." : "💾 שמירה + הדפסה"}
+              ✓ סיום ליקוט
             </button>
           </div>
         </div>
