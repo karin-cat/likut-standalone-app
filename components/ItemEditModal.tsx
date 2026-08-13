@@ -109,7 +109,7 @@ export default function ItemEditModal({
 
         {isFreeItem && (
           <label className="flex flex-col gap-1 mb-3">
-            <span className="text-sm text-[var(--color-text-muted)]">יחידה</span>
+            <span className="text-sm text-[var(--color-text-muted)]">יחידת מידה</span>
             <select
               className="field-underline"
               value={unit}
