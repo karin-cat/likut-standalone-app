@@ -311,7 +311,7 @@ function FinishScreen({
       </div>
 
       {/* ── סקציה 4: סכום הזמנה מקורי + הערות ──────────────────────── */}
-      <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+      <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
         <div className="font-bold text-sm mb-4">💰 סכום ועיבוד</div>
         <div className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
