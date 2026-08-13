@@ -636,7 +636,7 @@ export default function PosPage() {
                     {p.sku && <div className="text-xs text-[var(--color-text-muted)]">מק&quot;ט {p.sku}</div>}
                   </div>
                   <div className="font-bold shrink-0">
-                    {fmt(p.price)} <span className="text-xs font-normal text-[var(--color-text-muted)]">/ {p.sold_by_weight ? 'ק"ג' : "יח'"}</span>
+                    {fmt(p.price)} <span className="text-xs font-normal text-[var(--color-text-muted)]">/ {p.pricing_type === "weight" || p.pricing_type === "package" ? 'ק"ג' : "יח'"}</span>
                   </div>
                 </button>
               ))
