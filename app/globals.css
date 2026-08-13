@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --color-brand: #3fa34d;       /* ירוק יסוד — בהשראת Loyverse */
-  --color-brand-dark: #2f8a3d;
-  --color-brand-darker: #256e31;
+  --color-brand: #8b3a3a;       /* אדום בורדו */
+  --color-brand-dark: #6b2e2e;
+  --color-brand-darker: #4a1f1f;
   --color-bg: #ffffff;
-  --color-bg-soft: #f5f7f5;
-  --color-text: #1f2a24;
-  --color-text-muted: #6b7a71;
-  --color-border: #e4e8e5;
+  --color-bg-soft: #faf7f7;
+  --color-text: #2a2a2a;
+  --color-text-muted: #7a7070;
+  --color-border: #e8e4e4;
   --color-danger: #d1453b;
   --color-warning: #b45309;
 }
