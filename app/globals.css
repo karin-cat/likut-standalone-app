@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* מסתיר את כפתור "הצגת סיסמה" המובנה של Edge — יש לנו כפתור מותאם משלנו בשדה הביטוי */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 :root {
   --color-brand: #8b3a3a;       /* אדום בורדו */
   --color-brand-dark: #6b2e2e;
