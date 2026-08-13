@@ -86,13 +86,22 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                 {it.status !== "missing" && it.line_total != null && (
                   <div className="text-xs text-green-700 font-bold">💰 מחיר סופי קבוע</div>
                 )}
-                {it.status !== "missing" && it.requires_cleaning && (
-                  <div className="text-xs text-[var(--color-text-muted)] space-y-0.5">
-                    <div>⚖️ מחויב לפי המשקל לפני ניקוי</div>
-                    {it.ordered_weight != null && <div>📋 הוזמן: {fmtQty(Number(it.ordered_weight), "kg")}</div>}
-                    {it.actual_weight_for_billing != null && <div>📦 בפועל ולחיוב: {fmtQty(Number(it.actual_weight_for_billing), "kg")}</div>}
-                    {it.clean_weight != null && <div>🧽 אחרי ניקוי: {fmtQty(Number(it.clean_weight), "kg")}</div>}
-                  </div>
+                {it.status !== "missing" && (
+                  <>
+                    {it.requires_cleaning && (
+                      <div className="text-xs text-[var(--color-text-muted)] space-y-0.5">
+                        <div>⚖️ מחויב לפי המשקל לפני ניקוי</div>
+                        {it.ordered_weight != null && <div>📋 הוזמן: {fmtQty(Number(it.ordered_weight), "kg")}</div>}
+                        {it.actual_weight_for_billing != null && <div>📦 בפועל ולחיוב: {fmtQty(Number(it.actual_weight_for_billing), "kg")}</div>}
+                        {it.clean_weight != null && <div>🧽 אחרי ניקוי: {fmtQty(Number(it.clean_weight), "kg")}</div>}
+                      </div>
+                    )}
+                    {!it.requires_cleaning && it.unit !== "unit" && it.ordered_weight != null && (
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        📋 הוזמן: {fmtQty(Number(it.ordered_weight), "kg")}
+                      </div>
+                    )}
+                  </>
                 )}
                 {it.note && <div className="text-xs text-amber-700">📝 {it.note}</div>}
               </td>
