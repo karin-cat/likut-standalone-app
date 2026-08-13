@@ -17,9 +17,9 @@ export default function HomePage() {
           <Image
             src="/logo4app.png"
             alt="ליקוט by DC"
-            width={200}
-            height={200}
-            className="w-48 h-auto"
+            width={64}
+            height={64}
+            className="w-16 h-auto"
             priority
           />
         </div>
