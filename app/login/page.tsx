@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 function LoginForm() {
   const router = useRouter();
@@ -40,9 +41,14 @@ function LoginForm() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-bg-soft)] px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-[var(--color-brand)] flex items-center justify-center text-white text-3xl font-bold shadow-md">
-            ל
-          </div>
+          <Image
+            src="/logo4app.png"
+            alt="ליקוט by DC"
+            width={64}
+            height={64}
+            className="mx-auto mb-4 w-16 h-auto"
+            priority
+          />
           <h1 className="text-xl font-bold">כניסה לאפליקציית ליקוט</h1>
         </div>
 
