@@ -30,8 +30,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // כל הנתיבים חוץ מקבצים סטטיים/מטא-דאטה של Next עצמו
+  // כל הנתיבים חוץ מקבצים סטטיים/מטא-דאטה של Next ותמונות/אייקונים ציבוריים (כמו הלוגו) בתיקיית public
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|icons/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|icons/|.*\\.(?:png|jpg|jpeg|svg|webp|gif|ico)$).*)",
   ],
 };
