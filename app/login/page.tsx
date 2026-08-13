@@ -10,6 +10,7 @@ function LoginForm() {
   const next = searchParams.get("next") || "/pos";
 
   const [passphrase, setPassphrase] = useState("");
+  const [showPassphrase, setShowPassphrase] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -55,16 +56,26 @@ function LoginForm() {
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1">
             <span className="text-sm text-[var(--color-text-muted)]">ביטוי כניסה</span>
-            <input
-              type="password"
-              inputMode="text"
-              autoComplete="current-password"
-              autoFocus
-              className="field-underline text-lg"
-              value={passphrase}
-              onChange={(e) => setPassphrase(e.target.value)}
-              disabled={loading}
-            />
+            <div className="relative flex items-center">
+              <input
+                type={showPassphrase ? "text" : "password"}
+                inputMode="text"
+                autoComplete="current-password"
+                autoFocus
+                className="field-underline text-lg pl-10"
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.target.value)}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassphrase((v) => !v)}
+                className="absolute left-2 text-sm text-[var(--color-text-muted)] px-2 py-1"
+                aria-label={showPassphrase ? "הסתרת הביטוי" : "הצגת הביטוי"}
+              >
+                {showPassphrase ? "🙈" : "👁️"}
+              </button>
+            </div>
           </label>
 
           {error && (
