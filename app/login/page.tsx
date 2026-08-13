@@ -60,7 +60,9 @@ function LoginForm() {
               <input
                 type={showPassphrase ? "text" : "password"}
                 inputMode="text"
-                autoComplete="current-password"
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore="true"
                 autoFocus
                 className="field-underline text-lg pl-10"
                 value={passphrase}
