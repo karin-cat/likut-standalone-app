@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const sku = r.sku ? String(r.sku).trim() : null;
     const category = r.category ? String(r.category).trim() : null;
     const image_url = r.image_url ? String(r.image_url).trim() : null;
-    const pricingType = ["weight", "package"].includes(r.pricing_type) ? r.pricing_type : "unit";
+    const pricingType = ["weight", "package"].includes(String(r.pricing_type || "")) ? String(r.pricing_type) : "unit";
     const price = Number(r.price) || 0;
     const salePrice = r.sale_price ? Number(r.sale_price) : null;
     const isOnSale = !!r.is_on_sale;
