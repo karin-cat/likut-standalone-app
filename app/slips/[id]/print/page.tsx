@@ -69,62 +69,54 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
         <thead>
           <tr className="border-b-2 border-black">
             <th className="text-right py-1.5">מוצר</th>
-            <th className="text-center py-1.5">כמות</th>
+            <th className="text-center py-1.5">הוזמן</th>
+            <th className="text-center py-1.5">בפועל</th>
             <th className="text-left py-1.5">מחיר</th>
           </tr>
         </thead>
         <tbody>
-          {items.map((it, i) => (
-            <tr key={it.id} className="border-b border-[var(--color-border)]">
-              <td className="py-1.5 pr-1">
-                {i + 1}. {it.name}
-                {it.status === "missing" && (
-                  <div className="text-xs text-[var(--color-danger)] font-bold">
-                    ✕ לא סופק{it.missing_reason ? ` — ${it.missing_reason}` : ""}
-                  </div>
-                )}
-                {it.status !== "missing" && it.line_total != null && (
-                  <div className="text-xs text-green-700 font-bold">💰 מחיר סופי קבוע</div>
-                )}
-                {it.status !== "missing" && (
-                  <>
-                    {it.requires_cleaning && (
-                      <div className="text-xs text-[var(--color-text-muted)] space-y-0.5">
-                        <div>⚖️ מחויב לפי המשקל לפני ניקוי</div>
-                        {it.ordered_weight != null && <div>📋 הוזמן: {fmtQty(Number(it.ordered_weight), "kg")}</div>}
-                        {it.actual_weight_for_billing != null && <div>📦 בפועל ולחיוב: {fmtQty(Number(it.actual_weight_for_billing), "kg")}</div>}
-                        {it.clean_weight != null && <div>🧽 אחרי ניקוי: {fmtQty(Number(it.clean_weight), "kg")}</div>}
-                      </div>
-                    )}
-                    {!it.requires_cleaning && it.unit !== "unit" && it.ordered_weight != null && (
-                      <div className="text-xs text-[var(--color-text-muted)]">
-                        📋 הוזמן: {fmtQty(Number(it.ordered_weight), "kg")}
-                      </div>
-                    )}
-                    {!it.requires_cleaning && it.unit === "unit" && it.ordered_weight != null && (
-                      <div className="text-xs text-[var(--color-text-muted)]">
-                        📋 הוזמן: {fmtQty(Number(it.ordered_weight), "unit")}
-                      </div>
-                    )}
-                  </>
-                )}
-                {it.note && <div className="text-xs text-amber-700">📝 {it.note}</div>}
-              </td>
-              <td className="text-center py-1.5">
-                {it.status === "missing" ? "—" : it.requires_cleaning && it.actual_weight_for_billing ? fmtQty(Number(it.actual_weight_for_billing), "kg") : fmtQty(Number(it.qty), it.unit)}
-              </td>
-              <td className="text-left py-1.5">
-                {it.status === "missing" ? "—" : fmt(computeItemPrice({
-                  unit: it.unit,
-                  qty: it.qty,
-                  unit_price: it.unit_price,
-                  line_total: it.line_total,
-                  actual_weight_for_billing: it.actual_weight_for_billing,
-                  status: it.status,
-                }))}
-              </td>
-            </tr>
-          ))}
+          {items.map((it, i) => {
+            const orderedDisplay = it.ordered_weight != null ? fmtQty(Number(it.ordered_weight), it.unit) : "—";
+            const actualDisplay = it.status === "missing" ? "—" : (it.requires_cleaning && it.actual_weight_for_billing ? fmtQty(Number(it.actual_weight_for_billing), "kg") : fmtQty(Number(it.qty), it.unit));
+            return (
+              <tr key={it.id} className="border-b border-[var(--color-border)]">
+                <td className="py-1.5 pr-1">
+                  <div>{i + 1}. {it.name}</div>
+                  {it.status === "missing" && (
+                    <div className="text-xs text-[var(--color-danger)] font-bold">
+                      ✕ לא סופק{it.missing_reason ? ` — ${it.missing_reason}` : ""}
+                    </div>
+                  )}
+                  {it.status !== "missing" && it.line_total != null && (
+                    <div className="text-xs text-green-700 font-bold">💰 מחיר סופי קבוע</div>
+                  )}
+                  {it.status !== "missing" && it.requires_cleaning && (
+                    <div className="text-xs text-[var(--color-text-muted)]">
+                      ⚖️ מחויב לפי משקל לפני ניקוי
+                      {it.clean_weight != null && <div>🧽 אחרי ניקוי: {fmtQty(Number(it.clean_weight), "kg")}</div>}
+                    </div>
+                  )}
+                  {it.note && <div className="text-xs text-amber-700">📝 {it.note}</div>}
+                </td>
+                <td className="text-center py-1.5">
+                  {orderedDisplay}
+                </td>
+                <td className="text-center py-1.5">
+                  {actualDisplay}
+                </td>
+                <td className="text-left py-1.5">
+                  {it.status === "missing" ? "—" : fmt(computeItemPrice({
+                    unit: it.unit,
+                    qty: it.qty,
+                    unit_price: it.unit_price,
+                    line_total: it.line_total,
+                    actual_weight_for_billing: it.actual_weight_for_billing,
+                    status: it.status,
+                  }))}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
