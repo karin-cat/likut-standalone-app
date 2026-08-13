@@ -78,7 +78,7 @@ export default function ItemEditModal({
       unit_price: !isNaN(up) && up >= 0 ? up : item.unit_price,
       line_total: !isNaN(lt) && lt >= 0 ? lt : null,
       note,
-      ordered_weight: item.requires_cleaning ? (!isNaN(ow) && ow >= 0 ? ow : null) : null,
+      ordered_weight: !isNaN(ow) && ow >= 0 ? ow : null,
       actual_weight_for_billing: item.requires_cleaning ? (!isNaN(awb) && awb >= 0 ? awb : null) : null,
       clean_weight: item.requires_cleaning ? (!isNaN(cw) && cw >= 0 ? cw : null) : null,
       status: missing ? "missing" : "picked",
