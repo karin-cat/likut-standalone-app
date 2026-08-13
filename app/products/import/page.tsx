@@ -6,13 +6,19 @@ import AppHeader from "@/components/AppHeader";
 import { parseCsv } from "@/lib/csv";
 
 const FIELD_GUESSES: Record<string, string[]> = {
-  name: ["name", "שם", "product name", "title"],
+  name: ["name", "שם", "שם המוצר", "product name", "title"],
   sku: ["sku", "מק\"ט", "מקט"],
   category: ["category", "categories", "קטגוריה", "קטגוריות"],
+  image_url: ["images", "image", "image url", "תמונות", "תמונה", "תמונה url"],
+  pricing_type: ["pricing type", "סוג תמחור"],
   price: ["price", "regular price", "מחיר", "מחיר רגיל"],
-  sale_price: ["sale price", "מחיר מבצע", "מחיר מבצע (₪)"],
-  image_url: ["images", "image", "image url", "תמונות", "תמונה", "קישור לתמונה"],
-  description: ["description", "תיאור"],
+  sale_price: ["sale price", "מחיר מבצע"],
+  is_on_sale: ["on sale", "במבצע"],
+  requires_cleaning: ["requires cleaning", "מצריך ניקוי"],
+  package_description: ["package description", "תיאור מארז"],
+  package_estimated_weight_min: ["min weight", "משקל משוער מינימום"],
+  package_estimated_weight_max: ["max weight", "משקל משוער מקסימום"],
+  description: ["description", "תיאור מקוצר", "תיאור"],
   notes: ["notes", "הערות"],
 };
 
@@ -20,15 +26,51 @@ const FIELD_LABELS: Record<ImportField, string> = {
   name: "שם מוצר (חובה)",
   sku: 'מק"ט',
   category: "קטגוריה",
-  price: "מחיר",
-  sale_price: "מחיר מבצע",
   image_url: "קישור לתמונה",
-  description: "תיאור",
+  pricing_type: "סוג תמחור (unit / weight / package)",
+  price: "מחיר רגיל",
+  sale_price: "מחיר מבצע",
+  is_on_sale: "במבצע (כן/לא)",
+  requires_cleaning: "מצריך ניקוי (כן/לא)",
+  package_description: "תיאור מארז",
+  package_estimated_weight_min: "משקל משוער מינימום",
+  package_estimated_weight_max: "משקל משוער מקסימום",
+  description: "תיאור מקוצר",
   notes: "הערות",
 };
 
-type ImportField = "name" | "sku" | "category" | "price" | "sale_price" | "image_url" | "description" | "notes";
-const IMPORT_FIELDS: ImportField[] = ["name", "sku", "category", "price", "sale_price", "image_url", "description", "notes"];
+type ImportField =
+  | "name"
+  | "sku"
+  | "category"
+  | "image_url"
+  | "pricing_type"
+  | "price"
+  | "sale_price"
+  | "is_on_sale"
+  | "requires_cleaning"
+  | "package_description"
+  | "package_estimated_weight_min"
+  | "package_estimated_weight_max"
+  | "description"
+  | "notes";
+
+const IMPORT_FIELDS: ImportField[] = [
+  "name",
+  "sku",
+  "category",
+  "image_url",
+  "pricing_type",
+  "price",
+  "sale_price",
+  "is_on_sale",
+  "requires_cleaning",
+  "package_description",
+  "package_estimated_weight_min",
+  "package_estimated_weight_max",
+  "description",
+  "notes",
+];
 
 function guessColumn(headers: string[], field: string): number {
   const candidates = FIELD_GUESSES[field] || [];
@@ -40,6 +82,21 @@ function guessColumn(headers: string[], field: string): number {
   return -1;
 }
 
+// "כן"/"לא" (או true/yes/1) → boolean
+function parseBool(raw: string): boolean {
+  const s = raw.trim();
+  return s === "כן" || /^(true|yes|1)$/i.test(s);
+}
+
+// משקל מארז — תומך גם ב"700 גרם" (מומר לק"ג) וגם במספר נקי שכבר בק"ג
+function parseWeightKg(raw: string): number | null {
+  const s = raw.trim();
+  if (!s) return null;
+  const num = parseFloat(s.replace(/[^\d.]/g, ""));
+  if (isNaN(num)) return null;
+  return /גרם|gram|g\b/i.test(s) && !/ק"?ג|קילו|kg/i.test(s) ? num / 1000 : num;
+}
+
 export default function ImportProductsPage() {
   const router = useRouter();
   const [headers, setHeaders] = useState<string[]>([]);
@@ -48,9 +105,15 @@ export default function ImportProductsPage() {
     name: -1,
     sku: -1,
     category: -1,
+    image_url: -1,
+    pricing_type: -1,
     price: -1,
     sale_price: -1,
-    image_url: -1,
+    is_on_sale: -1,
+    requires_cleaning: -1,
+    package_description: -1,
+    package_estimated_weight_min: -1,
+    package_estimated_weight_max: -1,
     description: -1,
     notes: -1,
   });
@@ -78,9 +141,15 @@ export default function ImportProductsPage() {
         name: guessColumn(hdrs, "name"),
         sku: guessColumn(hdrs, "sku"),
         category: guessColumn(hdrs, "category"),
+        image_url: guessColumn(hdrs, "image_url"),
+        pricing_type: guessColumn(hdrs, "pricing_type"),
         price: guessColumn(hdrs, "price"),
         sale_price: guessColumn(hdrs, "sale_price"),
-        image_url: guessColumn(hdrs, "image_url"),
+        is_on_sale: guessColumn(hdrs, "is_on_sale"),
+        requires_cleaning: guessColumn(hdrs, "requires_cleaning"),
+        package_description: guessColumn(hdrs, "package_description"),
+        package_estimated_weight_min: guessColumn(hdrs, "package_estimated_weight_min"),
+        package_estimated_weight_max: guessColumn(hdrs, "package_estimated_weight_max"),
         description: guessColumn(hdrs, "description"),
         notes: guessColumn(hdrs, "notes"),
       });
@@ -94,6 +163,7 @@ export default function ImportProductsPage() {
       name: r[mapping.name] || "",
       sku: mapping.sku !== -1 ? r[mapping.sku] || "" : "",
       category: mapping.category !== -1 ? r[mapping.category] || "" : "",
+      pricing_type: mapping.pricing_type !== -1 ? r[mapping.pricing_type] || "" : "",
       price: mapping.price !== -1 ? r[mapping.price] || "" : "",
       sale_price: mapping.sale_price !== -1 ? r[mapping.sale_price] || "" : "",
       image_url: mapping.image_url !== -1 ? r[mapping.image_url] || "" : "",
@@ -110,14 +180,24 @@ export default function ImportProductsPage() {
     const importRows = rows.map((r) => {
       const salePriceRaw = mapping.sale_price !== -1 ? (r[mapping.sale_price] || "").trim() : "";
       const salePrice = salePriceRaw ? parseFloat(salePriceRaw.replace(/[^\d.]/g, "")) || 0 : 0;
+      const pricingTypeRaw = mapping.pricing_type !== -1 ? (r[mapping.pricing_type] || "").trim().toLowerCase() : "";
+      const isOnSale = mapping.is_on_sale !== -1 ? parseBool(r[mapping.is_on_sale] || "") : !!salePrice;
+      const requiresCleaning = mapping.requires_cleaning !== -1 ? parseBool(r[mapping.requires_cleaning] || "") : false;
+      const weightMin = mapping.package_estimated_weight_min !== -1 ? parseWeightKg(r[mapping.package_estimated_weight_min] || "") : null;
+      const weightMax = mapping.package_estimated_weight_max !== -1 ? parseWeightKg(r[mapping.package_estimated_weight_max] || "") : null;
       return {
         name: r[mapping.name] || "",
         sku: mapping.sku !== -1 ? r[mapping.sku] || "" : "",
         category: mapping.category !== -1 ? r[mapping.category] || "" : "",
+        image_url: mapping.image_url !== -1 ? (r[mapping.image_url] || "").split(",")[0].trim() : "",
+        pricing_type: pricingTypeRaw || undefined,
         price: mapping.price !== -1 ? parseFloat((r[mapping.price] || "0").replace(/[^\d.]/g, "")) || 0 : 0,
         sale_price: salePrice || undefined,
-        is_on_sale: !!salePrice,
-        image_url: mapping.image_url !== -1 ? (r[mapping.image_url] || "").split(",")[0].trim() : "",
+        is_on_sale: isOnSale,
+        requires_cleaning: requiresCleaning,
+        package_description: mapping.package_description !== -1 ? r[mapping.package_description] || "" : "",
+        package_estimated_weight_min: weightMin || undefined,
+        package_estimated_weight_max: weightMax || undefined,
         description: mapping.description !== -1 ? r[mapping.description] || "" : "",
         notes: mapping.notes !== -1 ? r[mapping.notes] || "" : "",
       };
@@ -186,6 +266,7 @@ export default function ImportProductsPage() {
                       <th className="text-right py-1">שם</th>
                       <th className="text-right py-1">מק&quot;ט</th>
                       <th className="text-right py-1">קטגוריה</th>
+                      <th className="text-right py-1">סוג תמחור</th>
                       <th className="text-right py-1">מחיר</th>
                       <th className="text-right py-1">מחיר מבצע</th>
                       <th className="text-right py-1">תמונה</th>
@@ -197,6 +278,7 @@ export default function ImportProductsPage() {
                         <td className="py-1">{r.name}</td>
                         <td className="py-1">{r.sku}</td>
                         <td className="py-1">{r.category}</td>
+                        <td className="py-1">{r.pricing_type}</td>
                         <td className="py-1">{r.price}</td>
                         <td className="py-1">{r.sale_price}</td>
                         <td className="py-1 max-w-[120px] truncate">{r.image_url}</td>
@@ -208,7 +290,7 @@ export default function ImportProductsPage() {
             )}
 
             <div className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
-              💡 שדות &quot;נמכר לפי משקל&quot; ו&quot;מצריך ניקוי&quot; לא מיובאים אוטומטית — יש לסמן אותם ידנית לכל מוצר רלוונטי אחרי הייבוא (בעריכת המוצר).
+              💡 עמודת &quot;סוג תמחור&quot; צריכה להכיל אחד מהערכים: <strong>unit</strong> (יחידה), <strong>weight</strong> (משקל) או <strong>package</strong> (מארז). שדה &quot;משקל ליחידה&quot; לא מיובא אוטומטית — ניתן להוסיף ידנית לכל מוצר רלוונטי אחרי הייבוא (בעריכת המוצר).
             </div>
 
             {error && <div className="text-sm text-[var(--color-danger)]">{error}</div>}
