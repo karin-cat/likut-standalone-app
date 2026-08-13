@@ -161,23 +161,23 @@ export default function ItemEditModal({
               </div>
             )}
 
+            <label className="flex flex-col gap-1 mb-3">
+              <span className="text-sm text-[var(--color-text-muted)]">📦 כמה הוזמן — למראה בתעודה</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                step={isWeight ? "0.01" : "1"}
+                min="0"
+                className="field-underline"
+                value={orderedWeight}
+                onChange={(e) => setOrderedWeight(e.target.value)}
+                placeholder={isWeight ? "למשל: 6" : "למשל: 10"}
+              />
+              <span className="text-xs text-[var(--color-text-muted)]">יוצג בתעודה כ: "הוזמן X, בפועל Y"</span>
+            </label>
+
             {isWeight ? (
               <>
-                <label className="flex flex-col gap-1 mb-3">
-                  <span className="text-sm text-[var(--color-text-muted)]">📦 כמה הוזמן (ק"ג) — למראה בתעודה</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    className="field-underline"
-                    value={orderedWeight}
-                    onChange={(e) => setOrderedWeight(e.target.value)}
-                    placeholder="למשל: 6"
-                  />
-                  <span className="text-xs text-[var(--color-text-muted)]">יוצג בתעודה כ: "הוזמן X, בפועל Y"</span>
-                </label>
-
                 {item.requires_cleaning ? (
                   <>
                     <label className="flex flex-col gap-1 mb-3">
@@ -213,7 +213,7 @@ export default function ItemEditModal({
             ) : (
               <label className="flex flex-col gap-1 mb-3">
                 <span className="text-sm text-[var(--color-text-muted)]">
-                  📦 כמות {item.requires_cleaning ? "(הוזמן)" : ""}
+                  📦 כמות בפועל
                 </span>
                 <input
                   type="number"
