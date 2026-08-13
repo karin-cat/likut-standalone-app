@@ -28,6 +28,8 @@ export interface Product {
   package_description: string | null;
   package_estimated_weight_min: number | null;
   package_estimated_weight_max: number | null;
+  description: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -60,6 +62,10 @@ export interface Slip {
   mode: SlipMode;
   order_number: string | null;
   customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  customer_address_street: string | null;
+  customer_address_city: string | null;
   customer_address: string | null;
   shipping_method: string | null;
   delivery_date: string | null;
@@ -97,6 +103,10 @@ export interface SlipDraftMeta {
   mode: SlipMode;
   order_number: string;
   customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  customer_address_street: string;
+  customer_address_city: string;
   customer_address: string;
   shipping_method: string;
   delivery_date: string;
@@ -110,6 +120,10 @@ export function emptySlipDraftMeta(): SlipDraftMeta {
     mode: "standalone",
     order_number: "",
     customer_name: "",
+    customer_phone: "",
+    customer_email: "",
+    customer_address_street: "",
+    customer_address_city: "",
     customer_address: "",
     shipping_method: "",
     delivery_date: "",

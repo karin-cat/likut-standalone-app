@@ -5,7 +5,18 @@ interface ImportRow {
   name: string;
   sku?: string;
   category?: string;
+  image_url?: string;
+  pricing_type?: string;
   price?: number;
+  sale_price?: number;
+  is_on_sale?: boolean;
+  requires_cleaning?: boolean;
+  unit_weight?: number;
+  package_description?: string;
+  package_estimated_weight_min?: number;
+  package_estimated_weight_max?: number;
+  description?: string;
+  notes?: string;
 }
 
 export async function POST(request: Request) {
@@ -21,15 +32,29 @@ export async function POST(request: Request) {
     if (!name) continue;
     const sku = r.sku ? String(r.sku).trim() : null;
     const category = r.category ? String(r.category).trim() : null;
+    const image_url = r.image_url ? String(r.image_url).trim() : null;
+    const pricingType = ["weight", "package"].includes(r.pricing_type) ? r.pricing_type : "unit";
     const price = Number(r.price) || 0;
+    const salePrice = r.sale_price ? Number(r.sale_price) : null;
+    const isOnSale = !!r.is_on_sale;
+    const requiresCleaning = pricingType === "weight" ? !!r.requires_cleaning : false;
+    const unitWeight = pricingType === "unit" ? (r.unit_weight ? Number(r.unit_weight) : null) : null;
+    const packageDescription = pricingType === "package" ? (r.package_description ? String(r.package_description).trim() : null) : null;
+    const packageWeightMin = pricingType === "package" ? (r.package_estimated_weight_min ? Number(r.package_estimated_weight_min) : null) : null;
+    const packageWeightMax = pricingType === "package" ? (r.package_estimated_weight_max ? Number(r.package_estimated_weight_max) : null) : null;
+    const description = r.description ? String(r.description).trim() : null;
+    const notes = r.notes ? String(r.notes).trim() : null;
+
     await sql`
       INSERT INTO products (
-        name, sku, category, unit, price, pricing_type, sale_price, is_on_sale,
-        sold_by_weight, requires_cleaning
+        name, sku, category, image_url, unit, price, pricing_type, sale_price, is_on_sale,
+        sold_by_weight, requires_cleaning, unit_weight, package_description,
+        package_estimated_weight_min, package_estimated_weight_max, description, notes
       )
       VALUES (
-        ${name}, ${sku}, ${category}, 'unit', ${price}, 'unit', NULL, FALSE,
-        FALSE, FALSE
+        ${name}, ${sku}, ${category}, ${image_url}, 'unit', ${price}, ${pricingType}, ${salePrice}, ${isOnSale},
+        FALSE, ${requiresCleaning}, ${unitWeight}, ${packageDescription},
+        ${packageWeightMin}, ${packageWeightMax}, ${description}, ${notes}
       )
     `;
     inserted++;

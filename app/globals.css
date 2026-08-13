@@ -20,6 +20,10 @@
   --font-sans: var(--font-heebo);
 }
 
+html {
+  font-size: 19.2px; /* 16px * 1.2 (הגדלה של 20%) */
+}
+
 html,
 body {
   height: 100%;
@@ -32,7 +36,8 @@ body {
 }
 
 /* שדות טופס בסגנון קו-תחתון מינימלי — כמו במסך ה-POS הקיים / Loyverse */
-.field-underline {
+.field-underline,
+.field-underline select {
   width: 100%;
   border: none;
   border-bottom: 1px solid var(--color-border);
@@ -40,8 +45,10 @@ body {
   padding: 10px 2px;
   font-size: 16px;
   outline: none;
+  font-family: inherit;
 }
-.field-underline:focus {
+.field-underline:focus,
+.field-underline select:focus {
   border-bottom-color: var(--color-brand);
 }
 

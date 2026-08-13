@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS products (
   package_description          TEXT, -- תיאור המארז (עבור pricing_type='package')
   package_estimated_weight_min NUMERIC(10,3), -- משקל משוער מינימום (עבור pricing_type='package')
   package_estimated_weight_max NUMERIC(10,3), -- משקל משוער מקסימום (עבור pricing_type='package')
+  description                  TEXT, -- תיאור מקוצר של המוצר
+  notes                        TEXT, -- הערות אופציונליות
   created_at                   TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at                   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -26,18 +28,22 @@ CREATE INDEX IF NOT EXISTS idx_products_name ON products (name);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
 
 CREATE TABLE IF NOT EXISTS slips (
-  id                 SERIAL PRIMARY KEY,
-  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
-  mode               TEXT NOT NULL DEFAULT 'standalone', -- 'linked' (הזמנה קיימת) | 'standalone' (ליקוט עצמאי)
-  order_number       TEXT,   -- מספר ההזמנה בוורדפרס (רק במצב linked)
-  customer_name      TEXT,
-  customer_address   TEXT,
-  shipping_method    TEXT,
-  delivery_date      TEXT,
-  shipping_cost      NUMERIC(10,2),
-  note               TEXT,   -- הערות כלליות
-  original_total     NUMERIC(10,2), -- סכום ההזמנה המקורי, מוזן ידנית (רק במצב linked) — הבסיס להשוואה
-  total              NUMERIC(10,2) NOT NULL DEFAULT 0 -- סה"כ בפועל (סכום הפריטים שנגבו בפועל, ללא פריטים חסרים)
+  id                      SERIAL PRIMARY KEY,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+  mode                    TEXT NOT NULL DEFAULT 'standalone', -- 'linked' (הזמנה קיימת) | 'standalone' (ליקוט עצמאי)
+  order_number            TEXT,   -- מספר ההזמנה בוורדפרס (רק במצב linked)
+  customer_name           TEXT,
+  customer_phone          TEXT,   -- טלפון לקוח
+  customer_email          TEXT,   -- מייל לקוח
+  customer_address_street TEXT,   -- רחוב וביתי
+  customer_address_city   TEXT,   -- עיר
+  customer_address        TEXT,   -- legacy: כתובת מלאה (לתיאום עם linked mode)
+  shipping_method         TEXT,
+  delivery_date           TEXT,
+  shipping_cost           NUMERIC(10,2),
+  note                    TEXT,   -- הערות כלליות
+  original_total          NUMERIC(10,2), -- סכום ההזמנה המקורי, מוזן ידנית (רק במצב linked) — הבסיס להשוואה
+  total                   NUMERIC(10,2) NOT NULL DEFAULT 0 -- סה"כ בפועל (סכום הפריטים שנגבו בפועל, ללא פריטים חסרים)
 );
 
 CREATE TABLE IF NOT EXISTS slip_items (

@@ -53,6 +53,10 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
         <div className="text-sm mb-4 border-b border-[var(--color-border)] pb-3 flex flex-col gap-0.5">
           {slip.order_number && <div>הזמנה #{slip.order_number}</div>}
           {slip.customer_name && <div>👤 {slip.customer_name}</div>}
+          {slip.customer_phone && <div>📞 {slip.customer_phone}</div>}
+          {slip.customer_email && <div>📧 {slip.customer_email}</div>}
+          {slip.customer_address_street && <div>🏘️ {slip.customer_address_street}</div>}
+          {slip.customer_address_city && <div>🏙️ {slip.customer_address_city}</div>}
           {slip.customer_address && <div>📍 {slip.customer_address}</div>}
           {slip.shipping_method && <div>🚚 {slip.shipping_method}</div>}
           {slip.delivery_date && <div>📅 {slip.delivery_date}</div>}

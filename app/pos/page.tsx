@@ -113,6 +113,7 @@ function StartScreen({
           <span className="text-sm text-[var(--color-text-muted)]">מספר הזמנה</span>
           <input
             className="field-underline"
+            type="number"
             value={meta.order_number}
             onChange={(e) => setMeta({ ...meta, order_number: e.target.value })}
           />
@@ -121,37 +122,86 @@ function StartScreen({
           <span className="text-sm text-[var(--color-text-muted)]">שם לקוח</span>
           <input
             className="field-underline"
+            inputMode="text"
             value={meta.customer_name}
             onChange={(e) => setMeta({ ...meta, customer_name: e.target.value })}
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">כתובת</span>
+          <span className="text-sm text-[var(--color-text-muted)]">📞 טלפון לקוח</span>
           <input
             className="field-underline"
+            inputMode="tel"
+            placeholder="למשל: 054-1234567"
+            value={meta.customer_phone}
+            onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-[var(--color-text-muted)]">📧 מייל לקוח</span>
+          <input
+            className="field-underline"
+            inputMode="email"
+            placeholder="customer@example.com"
+            value={meta.customer_email}
+            onChange={(e) => setMeta({ ...meta, customer_email: e.target.value })}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב וביתי</span>
+          <input
+            className="field-underline"
+            inputMode="text"
+            placeholder="למשל: רחוב שטרן 15"
+            value={meta.customer_address_street}
+            onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-[var(--color-text-muted)]">🏙️ עיר</span>
+          <input
+            className="field-underline"
+            inputMode="text"
+            placeholder="למשל: ירושלים"
+            value={meta.customer_address_city}
+            onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-[var(--color-text-muted)]">📍 כתובת (מלאה - legacy)</span>
+          <input
+            className="field-underline"
+            inputMode="text"
             value={meta.customer_address}
             onChange={(e) => setMeta({ ...meta, customer_address: e.target.value })}
           />
+          <span className="text-xs text-[var(--color-text-muted)]">אם יש הזמנה מקורית עם כתובת מלאה</span>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">שיטת משלוח</span>
-          <input
+          <span className="text-sm text-[var(--color-text-muted)]">🚚 שיטת משלוח</span>
+          <select
             className="field-underline"
-            placeholder="משלוח / איסוף עצמי"
             value={meta.shipping_method}
             onChange={(e) => setMeta({ ...meta, shipping_method: e.target.value })}
-          />
+          >
+            <option value="">בחר שיטת משלוח...</option>
+            <option value="איסוף עצמי">איסוף עצמי</option>
+            <option value="משלוח עד הבית">משלוח עד הבית</option>
+            <option value="אחר">אחר</option>
+          </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">תאריך אספקה</span>
+          <span className="text-sm text-[var(--color-text-muted)]">📅 תאריך אספקה</span>
           <input
+            type="date"
             className="field-underline"
             value={meta.delivery_date}
             onChange={(e) => setMeta({ ...meta, delivery_date: e.target.value })}
           />
+          <span className="text-xs text-[var(--color-text-muted)]">פורמט: יום/חודש/שנה</span>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">עלות משלוח (₪)</span>
+          <span className="text-sm text-[var(--color-text-muted)]">💵 עלות משלוח (₪)</span>
           <input
             type="number"
             inputMode="decimal"
@@ -163,9 +213,10 @@ function StartScreen({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">הערות כלליות</span>
+          <span className="text-sm text-[var(--color-text-muted)]">💬 הערות כלליות</span>
           <input
             className="field-underline"
+            inputMode="text"
             value={meta.note}
             onChange={(e) => setMeta({ ...meta, note: e.target.value })}
           />
@@ -185,7 +236,7 @@ function StartScreen({
             onChange={(e) => setMeta({ ...meta, original_total: e.target.value })}
           />
           <span className="text-xs text-[var(--color-text-muted)]">
-            ישמש בסוף הליקוט להשוואה מול הסכום בפועל, ולהצגת שורת &quot;התאמת מחיר למשקל בפועל&quot;
+            ⚠️ הסכום צריך <strong>לכלול את עלות המשלוח</strong>. ישמש בסוף הליקוט להשוואה מול הסכום בפועל.
           </span>
         </label>
       </div>

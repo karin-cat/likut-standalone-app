@@ -18,6 +18,10 @@ export async function POST(request: Request) {
   const mode: SlipMode = body.mode === "linked" ? "linked" : "standalone";
   const order_number = body.order_number ? String(body.order_number).trim() : null;
   const customer_name = body.customer_name ? String(body.customer_name).trim() : null;
+  const customer_phone = body.customer_phone ? String(body.customer_phone).trim() : null;
+  const customer_email = body.customer_email ? String(body.customer_email).trim() : null;
+  const customer_address_street = body.customer_address_street ? String(body.customer_address_street).trim() : null;
+  const customer_address_city = body.customer_address_city ? String(body.customer_address_city).trim() : null;
   const customer_address = body.customer_address ? String(body.customer_address).trim() : null;
   const shipping_method = body.shipping_method ? String(body.shipping_method).trim() : null;
   const delivery_date = body.delivery_date ? String(body.delivery_date).trim() : null;
@@ -48,10 +52,12 @@ export async function POST(request: Request) {
 
   const slipRows = await sql`
     INSERT INTO slips
-      (mode, order_number, customer_name, customer_address, shipping_method,
+      (mode, order_number, customer_name, customer_phone, customer_email,
+       customer_address_street, customer_address_city, customer_address, shipping_method,
        delivery_date, shipping_cost, note, original_total, total)
     VALUES
-      (${mode}, ${order_number}, ${customer_name}, ${customer_address}, ${shipping_method},
+      (${mode}, ${order_number}, ${customer_name}, ${customer_phone}, ${customer_email},
+       ${customer_address_street}, ${customer_address_city}, ${customer_address}, ${shipping_method},
        ${delivery_date}, ${shipping_cost}, ${note}, ${original_total}, ${total})
     RETURNING *
   `;

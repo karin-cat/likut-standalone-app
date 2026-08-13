@@ -19,6 +19,8 @@ export interface ProductFormValues {
   packageDescription: string;
   packageWeightMin: string;
   packageWeightMax: string;
+  description: string;
+  notes: string;
 }
 
 function toFormValues(p?: Product): ProductFormValues {
@@ -37,6 +39,8 @@ function toFormValues(p?: Product): ProductFormValues {
     packageDescription: p?.package_description || "",
     packageWeightMin: p?.package_estimated_weight_min != null ? String(p.package_estimated_weight_min) : "",
     packageWeightMax: p?.package_estimated_weight_max != null ? String(p.package_estimated_weight_max) : "",
+    description: p?.description || "",
+    notes: p?.notes || "",
   };
 }
 
@@ -84,6 +88,8 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
         package_description: values.pricingType === "package" ? (values.packageDescription || null) : null,
         package_estimated_weight_min: values.pricingType === "package" ? (parseFloat(values.packageWeightMin) || null) : null,
         package_estimated_weight_max: values.pricingType === "package" ? (parseFloat(values.packageWeightMax) || null) : null,
+        description: values.description || null,
+        notes: values.notes || null,
       };
       const res = await fetch(id ? `/api/products/${id}` : "/api/products", {
         method: id ? "PUT" : "POST",
@@ -122,6 +128,26 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
           required
           value={values.name}
           onChange={(e) => setValues({ ...values, name: e.target.value })}
+        />
+      </label>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-sm text-[var(--color-text-muted)]">תיאור מקוצר</span>
+        <input
+          className="field-underline"
+          placeholder="למשל: קפוא 500 גרם, בקבוק 1 ליטר"
+          value={values.description}
+          onChange={(e) => setValues({ ...values, description: e.target.value })}
+        />
+      </label>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-sm text-[var(--color-text-muted)]">הערות — אופציונלי</span>
+        <input
+          className="field-underline"
+          placeholder="למשל: משום סיבה מיוחדת זו דורשת טיפול מיוחד"
+          value={values.notes}
+          onChange={(e) => setValues({ ...values, notes: e.target.value })}
         />
       </label>
 
