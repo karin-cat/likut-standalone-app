@@ -137,7 +137,7 @@ function StartScreen({
           onClick={onStart}
           className="flex-1 rounded-xl bg-[var(--color-brand)] text-white font-bold py-3 text-lg"
         >
-          התחל ليقوط →
+          התחל ליקוט →
         </button>
       </div>
     </div>
