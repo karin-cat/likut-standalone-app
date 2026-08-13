@@ -11,6 +11,7 @@ export default function WeightKeypad({
   onClose,
   onMoreOptions,
   initialValue,
+  allowGramToggle = false,
 }: {
   title: string;
   label: string;
@@ -18,13 +19,15 @@ export default function WeightKeypad({
   onClose: () => void;
   onMoreOptions?: () => void;
   initialValue?: string;
+  allowGramToggle?: boolean;
 }) {
   const [digits, setDigits] = useState(initialValue || "");
+  const [entryUnit, setEntryUnit] = useState<"kg" | "gram">("kg");
 
   function pressKey(k: string) {
     if (k === "אשר") {
       const v = parseFloat(digits);
-      if (!isNaN(v) && v > 0) onConfirm(v);
+      if (!isNaN(v) && v > 0) onConfirm(entryUnit === "gram" ? v / 1000 : v);
       return;
     }
     if (k === ".") {
@@ -35,6 +38,12 @@ export default function WeightKeypad({
     // הגבלת אורך סבירה
     if (digits.replace(".", "").length >= 6) return;
     setDigits((d) => (d === "0" ? k : d + k));
+  }
+
+  function switchUnit(u: "kg" | "gram") {
+    if (u === entryUnit) return;
+    setEntryUnit(u);
+    setDigits("");
   }
 
   function backspace() {
@@ -52,7 +61,37 @@ export default function WeightKeypad({
       </div>
 
       <div className="flex-1 flex flex-col justify-end px-6 pb-6">
-        <div className="text-sm text-[var(--color-text-muted)] mb-1">{label}</div>
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-sm text-[var(--color-text-muted)]">
+            {label} {allowGramToggle ? `(${entryUnit === "kg" ? 'ק"ג' : "גרם"})` : ""}
+          </div>
+          {allowGramToggle && (
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => switchUnit("kg")}
+                className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  entryUnit === "kg"
+                    ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                    : "border-[var(--color-border)] text-[var(--color-text-muted)]"
+                }`}
+              >
+                ק&quot;ג
+              </button>
+              <button
+                type="button"
+                onClick={() => switchUnit("gram")}
+                className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  entryUnit === "gram"
+                    ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                    : "border-[var(--color-border)] text-[var(--color-text-muted)]"
+                }`}
+              >
+                גרם
+              </button>
+            </div>
+          )}
+        </div>
         <div className="flex items-center justify-between">
           <div className="text-6xl font-bold tabular-nums">{digits || "0"}</div>
           <button

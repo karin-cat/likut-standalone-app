@@ -17,14 +17,14 @@ type Phase = "start" | "working" | "finish";
 type Tab = "catalog" | "cart";
 
 function productToCartItem(p: Product): CartItem {
-  const isWeight = p.pricing_type === "weight";
-  const isPackage = p.pricing_type === "package";
+  // מוצר "מארז" מתומחר לק"ג (כמו משקל) — האריזה שוקלת כמות משתנה, ולכן צריך להזין משקל בפועל ולא רק "1 מארז"
+  const isWeighed = p.pricing_type === "weight" || p.pricing_type === "package";
   return {
     product_id: p.id,
     name: p.name,
     sku: p.sku,
-    unit: isWeight ? "kg" : isPackage ? "unit" : "unit",
-    qty: isWeight ? 0 : isPackage ? 1 : 1,
+    unit: isWeighed ? "kg" : "unit",
+    qty: isWeighed ? 0 : 1,
     unit_price: p.is_on_sale && p.sale_price ? p.sale_price : p.price,
     line_total: null,
     note: "",
@@ -757,11 +757,12 @@ export default function PosPage() {
           title={keypadFlow.item.name}
           label={
             keypadFlow.item.requires_cleaning
-              ? `משקל לפני ניקוי (${keypadFlow.item.unit === "unit" ? "יח'" : 'ק"ג'})`
+              ? "משקל לפני ניקוי"
               : keypadFlow.item.unit === "unit"
-                ? "כמות"
-                : 'משקל (ק"ג)'
+                ? "כמות יחידות"
+                : "משקל"
           }
+          allowGramToggle={keypadFlow.item.unit !== "unit"}
           initialValue={keypadFlow.item.unit === "unit" ? "1" : ""}
           onConfirm={handleKeypadPrimaryConfirm}
           onClose={() => setKeypadFlow(null)}
@@ -771,7 +772,8 @@ export default function PosPage() {
       {keypadFlow && keypadFlow.stage === "clean" && (
         <WeightKeypad
           title={keypadFlow.item.name}
-          label='משקל אחרי ניקוי (ק"ג) — לתיעוד בלבד'
+          label="משקל אחרי ניקוי — לתיעוד בלבד"
+          allowGramToggle
           onConfirm={handleKeypadCleanConfirm}
           onClose={() => setKeypadFlow(null)}
         />
