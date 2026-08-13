@@ -16,6 +16,46 @@ function fmt(n: number): string {
 type Phase = "start" | "working" | "finish";
 type Tab = "catalog" | "cart";
 
+// שמירת טיוטת התעודה ב-localStorage — כדי שרענון בטעות לא ימחק עגלה שכבר לוקטה
+const DRAFT_KEY = "likut_pos_draft_v1";
+
+interface Draft {
+  phase: Phase;
+  meta: SlipDraftMeta;
+  cart: CartItem[];
+}
+
+function loadDraft(): Draft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as Draft;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(draft: Draft) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // localStorage לא זמין — לא קריטי, ממשיכים בלי שמירה
+  }
+}
+
+function clearDraft() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 function productToCartItem(p: Product): CartItem {
   // מוצר "מארז" מתומחר לק"ג (כמו משקל) — האריזה שוקלת כמות משתנה, ולכן צריך להזין משקל בפועל ולא רק "1 מארז"
   const isWeighed = p.pricing_type === "weight" || p.pricing_type === "package";
@@ -363,8 +403,8 @@ function FinishScreen({
 
 export default function PosPage() {
   const router = useRouter();
-  const [phase, setPhase] = useState<Phase>("start");
-  const [meta, setMeta] = useState<SlipDraftMeta>(emptySlipDraftMeta());
+  const [phase, setPhase] = useState<Phase>(() => loadDraft()?.phase || "start");
+  const [meta, setMeta] = useState<SlipDraftMeta>(() => loadDraft()?.meta || emptySlipDraftMeta());
 
   const [tab, setTab] = useState<Tab>("catalog");
   const [products, setProducts] = useState<Product[]>([]);
@@ -372,12 +412,29 @@ export default function PosPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
 
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => loadDraft()?.cart || []);
   const [editing, setEditing] = useState<{ index: number | null; item: CartItem } | null>(null);
   const [keypadFlow, setKeypadFlow] = useState<{ item: CartItem; stage: "primary" | "clean" } | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // שמירה אוטומטית של הטיוטה בכל שינוי — כך שרענון בטעות לא ימחק את הליקוט
+  useEffect(() => {
+    saveDraft({ phase, meta, cart });
+  }, [phase, meta, cart]);
+
+  function resetDraft() {
+    if (!window.confirm("לבטל את התעודה הנוכחית ולהתחיל מחדש? כל הפריטים שנוספו יימחקו.")) return;
+    clearDraft();
+    setPhase("start");
+    setMeta(emptySlipDraftMeta());
+    setCart([]);
+    setTab("catalog");
+    setEditing(null);
+    setKeypadFlow(null);
+    setSaveError(null);
+  }
 
   useEffect(() => {
     if (phase !== "working") return;
@@ -514,6 +571,7 @@ export default function PosPage() {
         setSaving(false);
         return;
       }
+      clearDraft();
       router.push(`/slips/${data.id}/print`);
     } catch {
       setSaveError("בעיית תקשורת — יש לבדוק חיבור ולנסות שוב");
@@ -557,6 +615,14 @@ export default function PosPage() {
           className={`flex-1 py-3 font-bold ${tab === "cart" ? "text-[var(--color-brand)] border-b-2 border-[var(--color-brand)]" : "text-[var(--color-text-muted)]"}`}
         >
           🧾 עגלה {cart.length > 0 ? `(${cart.length})` : ""}
+        </button>
+        <button
+          type="button"
+          onClick={resetDraft}
+          className="px-3 text-xs text-[var(--color-danger)] shrink-0"
+          aria-label="ביטול תעודה"
+        >
+          🗑 ביטול
         </button>
       </div>
 
