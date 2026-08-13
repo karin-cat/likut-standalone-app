@@ -635,8 +635,16 @@ export default function PosPage() {
                     </div>
                     {p.sku && <div className="text-xs text-[var(--color-text-muted)]">מק&quot;ט {p.sku}</div>}
                   </div>
-                  <div className="font-bold shrink-0">
-                    {fmt(p.price)} <span className="text-xs font-normal text-[var(--color-text-muted)]">/ {p.pricing_type === "weight" || p.pricing_type === "package" ? 'ק"ג' : "יח'"}</span>
+                  <div className="font-bold shrink-0 text-left">
+                    {p.is_on_sale && p.sale_price ? (
+                      <>
+                        <div className="text-[var(--color-danger)]">{fmt(p.sale_price)}</div>
+                        <div className="text-xs font-normal text-[var(--color-text-muted)] line-through">{fmt(p.price)}</div>
+                      </>
+                    ) : (
+                      <div>{fmt(p.price)}</div>
+                    )}
+                    <span className="text-xs font-normal text-[var(--color-text-muted)]">/ {p.pricing_type === "weight" || p.pricing_type === "package" ? 'ק"ג' : "יח'"}</span>
                   </div>
                 </button>
               ))
