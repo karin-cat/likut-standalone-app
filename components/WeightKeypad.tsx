@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "אשר"];
+const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0"];
 
 export default function WeightKeypad({
   title,
@@ -25,11 +25,6 @@ export default function WeightKeypad({
   const [entryUnit, setEntryUnit] = useState<"kg" | "gram">("kg");
 
   function pressKey(k: string) {
-    if (k === "אשר") {
-      const v = parseFloat(digits);
-      if (!isNaN(v) && v > 0) onConfirm(entryUnit === "gram" ? v / 1000 : v);
-      return;
-    }
     if (k === ".") {
       if (digits.includes(".")) return;
       setDigits((d) => (d === "" ? "0." : d + "."));
@@ -38,6 +33,11 @@ export default function WeightKeypad({
     // הגבלת אורך סבירה
     if (digits.replace(".", "").length >= 6) return;
     setDigits((d) => (d === "0" ? k : d + k));
+  }
+
+  function handleConfirm() {
+    const v = parseFloat(digits);
+    if (!isNaN(v) && v > 0) onConfirm(entryUnit === "gram" ? v / 1000 : v);
   }
 
   function switchUnit(u: "kg" | "gram") {
@@ -157,15 +157,23 @@ export default function WeightKeypad({
         )}
       </div>
 
-      <div className="grid grid-cols-3 border-t border-[var(--color-border)] shrink-0">
+      <div className="px-4 py-3 border-t border-[var(--color-border)] shrink-0">
+        <button
+          type="button"
+          onClick={handleConfirm}
+          className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold text-xl py-3.5"
+        >
+          ✓ אשר
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 shrink-0">
         {KEYS.map((k) => (
           <button
             key={k}
             type="button"
             onClick={() => pressKey(k)}
-            className={`h-20 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)] ${
-              k === "אשר" ? "text-[var(--color-brand)]" : ""
-            }`}
+            className="h-20 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)]"
           >
             {k}
           </button>
