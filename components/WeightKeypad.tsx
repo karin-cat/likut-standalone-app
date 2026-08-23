@@ -73,8 +73,8 @@ export default function WeightKeypad({
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-white flex flex-col overflow-y-auto">
-      <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--color-border)] shrink-0">
+    <div className="fixed inset-0 z-40 bg-white overflow-y-auto">
+      <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
         <button type="button" onClick={onClose} className="text-2xl w-8 text-[var(--color-text-muted)]" aria-label="סגירה">
           ✕
         </button>
@@ -82,7 +82,7 @@ export default function WeightKeypad({
         <span className="w-8" />
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col justify-start px-6 pb-6 pt-5">
+      <div className="px-6 pb-6 pt-5">
         <div className="flex items-center justify-between mb-1">
           <div className="text-sm text-[var(--color-text-muted)]">
             {label} {allowGramToggle ? `(${entryUnit === "kg" ? 'ק"ג' : "גרם"})` : ""}
@@ -157,7 +157,7 @@ export default function WeightKeypad({
         )}
       </div>
 
-      <div className="px-4 py-2 border-t border-[var(--color-border)] shrink-0">
+      <div className="px-4 py-2 border-t border-[var(--color-border)]">
         <button
           type="button"
           onClick={handleConfirm}
@@ -167,7 +167,7 @@ export default function WeightKeypad({
         </button>
       </div>
 
-      <div className="grid grid-cols-3 shrink-0">
+      <div className="grid grid-cols-3">
         {KEYS.map((k) => (
           <button
             key={k}
