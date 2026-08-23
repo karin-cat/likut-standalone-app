@@ -6,48 +6,48 @@ import AppHeader from "@/components/AppHeader";
 import ItemEditModal from "@/components/ItemEditModal";
 import WeightKeypad from "@/components/WeightKeypad";
 import { categoryColor } from "@/lib/categoryColor";
-import { computeItemPrice, emptySlipDraftMeta, round2 } from "@/lib/types";
-import type { CartItem, Product, SlipDraftMeta } from "@/lib/types";
+import { computeItemPrice, emptySlipDraftMeta, PICKER_NAMES, round2 } from "@/lib/types";
+import type { CartItem, PickerName, Product, Slip, SlipDraftMeta, SlipItem } from "@/lib/types";
 
 function fmt(n: number): string {
   return "₪" + n.toFixed(2);
 }
 
-type Phase = "start" | "working" | "finish";
+type Phase = "menu" | "order-form" | "resume-list" | "working";
 type Tab = "catalog" | "cart";
 
-// שמירת טיוטת התעודה ב-localStorage — כדי שרענון בטעות לא ימחק עגלה שכבר לוקטה
-const DRAFT_KEY = "likut_pos_draft_v1";
+// שמירת טיוטת התעודה הפעילה ב-localStorage — כדי שרענון בטעות לא ימחק עגלה שכבר לוקטה
+const DRAFT_KEY = "likut_pos_draft_v2";
 
-interface Draft {
-  phase: Phase;
+interface LocalDraft {
+  draftId: number;
   meta: SlipDraftMeta;
   cart: CartItem[];
 }
 
-function loadDraft(): Draft | null {
+function loadLocalDraft(): LocalDraft | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as Draft;
+    if (!parsed || typeof parsed !== "object" || !parsed.draftId) return null;
+    return parsed as LocalDraft;
   } catch {
     return null;
   }
 }
 
-function saveDraft(draft: Draft) {
+function saveLocalDraft(draft: LocalDraft) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   } catch {
-    // localStorage לא זמין — לא קריטי, ממשיכים בלי שמירה
+    // localStorage לא זמין — לא קריטי
   }
 }
 
-function clearDraft() {
+function clearLocalDraft() {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(DRAFT_KEY);
@@ -98,95 +98,317 @@ function freeCartItem(): CartItem {
   };
 }
 
-// ── מסך פתיחה — בחירת מצב + מספר הזמנה (אם מקושר) ──────────────────────────
-function StartScreen({
+function slipToCartItem(it: SlipItem): CartItem {
+  return {
+    product_id: it.product_id,
+    name: it.name,
+    sku: null,
+    unit: it.unit,
+    qty: it.qty,
+    unit_price: it.unit_price,
+    line_total: it.line_total,
+    note: it.note || "",
+    requires_cleaning: it.requires_cleaning,
+    ordered_weight: it.ordered_weight,
+    actual_weight_for_billing: it.actual_weight_for_billing,
+    clean_weight: it.clean_weight,
+    catalog_price: null,
+    status: it.status,
+    missing_reason: it.missing_reason || "",
+  };
+}
+
+function slipToMeta(s: Slip): SlipDraftMeta {
+  return {
+    order_number: s.order_number || "",
+    customer_type: s.customer_name ? "specific" : "general",
+    customer_name: s.customer_name || "",
+    picker_name: (s.picker_name as PickerName) || "",
+    customer_phone: s.customer_phone || "",
+    customer_address_street: s.customer_address_street || "",
+    customer_address_city: s.customer_address_city || "",
+    shipping_method: s.shipping_method === "איסוף עצמי" ? "pickup" : s.shipping_method === "משלוח" ? "delivery" : "",
+    shipping_free: !s.shipping_cost,
+    shipping_cost: s.shipping_cost ? String(s.shipping_cost) : "",
+    note: s.note || "",
+  };
+}
+
+// ── מסך תפריט פתיחה — 2 אופציות: ליקוט הזמנה / המשך ליקוט קיים ──────────────
+function MenuScreen({ onNew, onResume }: { onNew: () => void; onResume: () => void }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
+      <button
+        type="button"
+        onClick={onNew}
+        className="w-full max-w-xs rounded-2xl bg-white shadow-sm border border-[var(--color-border)] py-6 text-center font-bold text-lg active:bg-[var(--color-bg-soft)]"
+      >
+        🧾 ליקוט הזמנה
+        <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">התחלת תעודה חדשה</div>
+      </button>
+      <button
+        type="button"
+        onClick={onResume}
+        className="w-full max-w-xs rounded-2xl bg-white shadow-sm border border-[var(--color-border)] py-6 text-center font-bold text-lg active:bg-[var(--color-bg-soft)]"
+      >
+        📋 המשך ליקוט קיים
+        <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">תעודות שלא הושלמו</div>
+      </button>
+    </div>
+  );
+}
+
+// ── מסך פתיחת הזמנה — כל הפרטים נאספים כאן, לפני תחילת הליקוט ──────────────
+function OrderForm({
   meta,
   setMeta,
+  onBack,
   onStart,
-  pendingDraft,
-  onResume,
+  starting,
+  startError,
 }: {
   meta: SlipDraftMeta;
   setMeta: (m: SlipDraftMeta) => void;
+  onBack: () => void;
   onStart: () => void;
-  pendingDraft: Draft | null;
-  onResume: () => void;
+  starting: boolean;
+  startError: string | null;
 }) {
-  const [showOrderForm, setShowOrderForm] = useState(meta.mode === "linked");
+  const [generatingOrderNumber, setGeneratingOrderNumber] = useState(false);
+  const now = useMemo(() => new Date(), []);
+  const dateLabel = now.toLocaleDateString("he-IL", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  const timeLabel = now.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 
-  function chooseMode(mode: "linked" | "standalone") {
-    setMeta({ ...meta, mode });
-    if (mode === "standalone") {
-      onStart();
-    } else {
-      setShowOrderForm(true);
+  async function generateOrderNumber() {
+    setGeneratingOrderNumber(true);
+    try {
+      const res = await fetch("/api/slips/generate-order-number");
+      const data = await res.json();
+      if (res.ok && data.order_number) {
+        setMeta({ ...meta, order_number: data.order_number });
+      }
+    } catch {
+      // ignore — ניתן להזין ידנית
+    } finally {
+      setGeneratingOrderNumber(false);
     }
   }
 
-  if (!showOrderForm) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-        <div className="text-lg font-bold mb-2">איך מתחילים?</div>
-        <button
-          type="button"
-          onClick={() => chooseMode("linked")}
-          className="w-full max-w-xs rounded-2xl bg-white shadow-sm border border-[var(--color-border)] py-6 text-center font-bold text-lg active:bg-[var(--color-bg-soft)]"
-        >
-          📋 ליקוט הזמנה קיימת
-          <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">
-            יש הזמנה מודפסת
-          </div>
-        </button>
-        <button
-          type="button"
-          onClick={() => chooseMode("standalone")}
-          className="w-full max-w-xs rounded-2xl bg-white shadow-sm border border-[var(--color-border)] py-6 text-center font-bold text-lg active:bg-[var(--color-bg-soft)]"
-        >
-          🧺 ליקוט עצמאי
-          <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">בלי הזמנה מקורית</div>
-        </button>
-
-        {pendingDraft && (
-          <button
-            type="button"
-            onClick={onResume}
-            className="w-full max-w-xs rounded-2xl bg-[var(--color-brand)] text-white shadow-sm py-6 text-center font-bold text-lg active:opacity-90 mt-2"
-          >
-            ▶️ המשך תעודה קיימת
-            <div className="text-xs font-normal text-white/80 mt-1">
-              {pendingDraft.cart.length > 0
-                ? `נותרו ${pendingDraft.cart.length} פריטים בעגלה`
-                : "נמצאה תעודה שלא הושלמה"}
-            </div>
-          </button>
-        )}
-      </div>
-    );
-  }
+  const isComplete = !!meta.picker_name && (meta.customer_type === "general" || meta.customer_name.trim() !== "");
 
   return (
     <div className="flex-1 overflow-y-auto p-4 pb-28">
-      <div className="font-bold text-lg mb-3">📋 מספר הזמנה</div>
-      <div className="flex flex-col gap-3">
+      <div className="text-sm text-[var(--color-text-muted)] mb-5 text-center">
+        📅 {dateLabel} · 🕐 {timeLabel}
+      </div>
+
+      {/* ── מספר הזמנה ─────────────────────────────────────────────── */}
+      <div className="mb-6">
         <label className="flex flex-col gap-1">
           <span className="text-sm text-[var(--color-text-muted)]">מספר הזמנה</span>
           <input
-            className="field-underline"
+            className="field-underline text-xl font-bold"
             type="text"
-            inputMode="numeric"
-            placeholder="למשל: 1234"
+            placeholder="הזני מספר או צרי אחד"
             value={meta.order_number}
             onChange={(e) => setMeta({ ...meta, order_number: e.target.value })}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={generateOrderNumber}
+          disabled={generatingOrderNumber}
+          className="mt-2 w-full rounded-xl border border-[var(--color-brand)] text-[var(--color-brand)] font-bold py-2.5 disabled:opacity-50"
+        >
+          {generatingOrderNumber ? "יוצר/ת..." : "✨ צור לי מספר הזמנה"}
+        </button>
+      </div>
+
+      {/* ── שם לקוח ─────────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="font-bold text-lg mb-3">👤 שם לקוח</div>
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setMeta({ ...meta, customer_type: "general" })}
+            className={`flex-1 rounded-xl py-4 text-center font-bold border-2 ${
+              meta.customer_type === "general"
+                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                : "bg-white border-[var(--color-border)]"
+            }`}
+          >
+            👥 לקוח כללי
+          </button>
+          <button
+            type="button"
+            onClick={() => setMeta({ ...meta, customer_type: "specific" })}
+            className={`flex-1 rounded-xl py-4 text-center font-bold border-2 ${
+              meta.customer_type === "specific"
+                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                : "bg-white border-[var(--color-border)]"
+            }`}
+          >
+            🙋 הזנת שם
+          </button>
+        </div>
+        {meta.customer_type === "specific" && (
+          <input
+            className="field-underline text-xl font-bold"
+            type="text"
+            placeholder="שם הלקוח/ה"
+            value={meta.customer_name}
+            onChange={(e) => setMeta({ ...meta, customer_name: e.target.value })}
             autoFocus
           />
-          <span className="text-xs text-[var(--color-text-muted)]">פרטי לקוח נוספים ישמרו אחרי הליקוט</span>
+        )}
+      </div>
+
+      {/* ── שם המלקט ────────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="font-bold text-lg mb-3">🧑‍💼 שם המלקט/ת</div>
+        <div className="flex gap-2">
+          {PICKER_NAMES.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => setMeta({ ...meta, picker_name: p.value })}
+              className={`flex-1 rounded-xl py-4 text-center font-bold border-2 ${
+                meta.picker_name === p.value
+                  ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                  : "bg-white border-[var(--color-border)]"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── פרטי קשר — אופציונלי ───────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">פרטי קשר (לא חובה)</div>
+        <div className="flex flex-col gap-2">
+          <label className="flex flex-col gap-0.5">
+            <span className="text-xs text-[var(--color-text-muted)]">📞 טלפון</span>
+            <input
+              className="field-underline text-sm py-2"
+              inputMode="tel"
+              placeholder="054-1234567"
+              value={meta.customer_phone}
+              onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-0.5">
+            <span className="text-xs text-[var(--color-text-muted)]">🏘️ רחוב ומספר</span>
+            <input
+              className="field-underline text-sm py-2"
+              placeholder="רחוב שטרן 15"
+              value={meta.customer_address_street}
+              onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-0.5">
+            <span className="text-xs text-[var(--color-text-muted)]">🏙️ עיר</span>
+            <input
+              className="field-underline text-sm py-2"
+              placeholder="ירושלים"
+              value={meta.customer_address_city}
+              onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* ── שיטת אספקה ──────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="font-bold text-lg mb-3">🚚 שיטת אספקה</div>
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setMeta({ ...meta, shipping_method: "pickup" })}
+            className={`flex-1 rounded-xl py-4 text-center font-bold border-2 ${
+              meta.shipping_method === "pickup"
+                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                : "bg-white border-[var(--color-border)]"
+            }`}
+          >
+            🏪 איסוף עצמי
+          </button>
+          <button
+            type="button"
+            onClick={() => setMeta({ ...meta, shipping_method: "delivery" })}
+            className={`flex-1 rounded-xl py-4 text-center font-bold border-2 ${
+              meta.shipping_method === "delivery"
+                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                : "bg-white border-[var(--color-border)]"
+            }`}
+          >
+            🚛 משלוח
+          </button>
+        </div>
+
+        {meta.shipping_method === "delivery" && (
+          <div className="bg-[var(--color-bg-soft)] rounded-xl p-3">
+            <div className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">עלות משלוח</div>
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setMeta({ ...meta, shipping_free: true, shipping_cost: "" })}
+                className={`flex-1 rounded-lg py-2.5 text-center font-bold border-2 ${
+                  meta.shipping_free
+                    ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                    : "bg-white border-[var(--color-border)]"
+                }`}
+              >
+                חינם
+              </button>
+              <button
+                type="button"
+                onClick={() => setMeta({ ...meta, shipping_free: false })}
+                className={`flex-1 rounded-lg py-2.5 text-center font-bold border-2 ${
+                  !meta.shipping_free
+                    ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                    : "bg-white border-[var(--color-border)]"
+                }`}
+              >
+                בתשלום
+              </button>
+            </div>
+            {!meta.shipping_free && (
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
+                className="field-underline"
+                placeholder="סכום ב-₪"
+                value={meta.shipping_cost}
+                onChange={(e) => setMeta({ ...meta, shipping_cost: e.target.value })}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── הערה ללקוח ──────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-[var(--color-text-muted)]">💬 הערה ללקוח (לא חובה)</span>
+          <input
+            className="field-underline"
+            placeholder="לדוגמה: להתקשר לפני האספקה"
+            value={meta.note}
+            onChange={(e) => setMeta({ ...meta, note: e.target.value })}
+          />
         </label>
       </div>
+
+      {startError && <div className="text-sm text-[var(--color-danger)] mb-3 text-center">{startError}</div>}
 
       <div className="fixed bottom-0 inset-x-0 bg-white border-t border-[var(--color-border)] p-3 flex gap-2">
         <button
           type="button"
-          onClick={() => setShowOrderForm(false)}
+          onClick={onBack}
           className="flex-1 rounded-xl border border-[var(--color-border)] font-bold py-3 text-lg"
         >
           ← חזור
@@ -194,236 +416,77 @@ function StartScreen({
         <button
           type="button"
           onClick={onStart}
-          className="flex-1 rounded-xl bg-[var(--color-brand)] text-white font-bold py-3 text-lg"
+          disabled={!isComplete || starting}
+          className="flex-1 rounded-xl bg-[var(--color-brand)] text-white font-bold py-3 text-lg disabled:opacity-50"
         >
-          התחל ליקוט →
+          {starting ? "מתחיל/ה..." : "התחל ליקוט →"}
         </button>
       </div>
     </div>
   );
 }
 
-// ── מסך סיום — בחירת לקוח + פרטים נוספים ──────────────────────────
-function FinishScreen({
-  meta,
-  setMeta,
-  onSave,
+// ── מסך "המשך ליקוט קיים" — רשימת תעודות טיוטה מהשרת ────────────────────────
+function ResumeListScreen({
+  onResume,
+  onDelete,
 }: {
-  meta: SlipDraftMeta;
-  setMeta: (m: SlipDraftMeta) => void;
-  onSave: () => void;
+  onResume: (id: number) => void;
+  onDelete: (id: number) => void;
 }) {
-  const [customerType, setCustomerType] = useState<"general" | "specific" | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [drafts, setDrafts] = useState<(Slip & { item_count: number })[] | null>(null);
 
-  const isComplete = customerType === "general" || (
-    customerType === "specific" &&
-    meta.customer_name &&
-    meta.customer_phone &&
-    meta.customer_email &&
-    meta.customer_address_street &&
-    meta.customer_address_city
-  );
-
-  async function handleSave() {
-    setSaving(true);
-    await onSave();
-    setSaving(false);
-  }
+  useEffect(() => {
+    fetch("/api/slips/drafts")
+      .then((r) => r.json())
+      .then((data) => setDrafts(Array.isArray(data) ? data : []))
+      .catch(() => setDrafts([]));
+  }, []);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 pb-28">
-      {/* ── סקציה 1: בחירת סוג לקוח ──────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="font-bold text-lg mb-4">👤 בחר סוג לקוח</div>
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => setCustomerType("general")}
-            className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
-              customerType === "general"
-                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
-                : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
-            }`}
-          >
-            👥 לקוח כללי
-            <div className="text-xs font-normal text-current opacity-75 mt-1">
-              {customerType === "general" ? "ללא שם ספציפי" : "ללא פרטים נוספים"}
+    <div className="flex-1 overflow-y-auto p-4">
+      {drafts === null ? (
+        <div className="text-center text-[var(--color-text-muted)] py-10">טוען...</div>
+      ) : drafts.length === 0 ? (
+        <div className="text-center text-[var(--color-text-muted)] py-10">אין תעודות פתוחות כרגע.</div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {drafts.map((d) => (
+            <div
+              key={d.id}
+              className="bg-white rounded-xl border border-[var(--color-border)] p-4 flex items-center justify-between gap-3"
+            >
+              <button type="button" onClick={() => onResume(d.id)} className="flex-1 text-right min-w-0">
+                <div className="font-bold truncate">{d.customer_name || "👥 לקוח כללי"}</div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  {d.order_number ? `הזמנה #${d.order_number} · ` : ""}
+                  {d.item_count} פריטים · {new Date(d.created_at).toLocaleString("he-IL")}
+                </div>
+                <div className="font-bold text-[var(--color-brand-dark)] mt-1">{fmt(Number(d.total))}</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(d.id)}
+                className="text-[var(--color-danger)] text-xl px-2 shrink-0"
+                aria-label="מחיקת תעודה"
+              >
+                🗑
+              </button>
             </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setCustomerType("specific")}
-            className={`w-full rounded-2xl py-6 text-center font-bold text-lg border-2 transition-all ${
-              customerType === "specific"
-                ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
-                : "bg-white border-[var(--color-border)] text-[var(--color-text)]"
-            }`}
-          >
-            👤 לקוח ספציפי
-            <div className="text-xs font-normal text-current opacity-75 mt-1">
-              {customerType === "specific" ? "עם פרטים מלאים" : "שם, טלפון, כתובת וכו'"}
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* ── סקציה 2: פרטי לקוח (אם ספציפי) ──────────────────────────── */}
-      {customerType === "specific" && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="font-bold text-sm mb-4">👤 פרטי לקוח</div>
-          <div className="flex flex-col gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-sm text-[var(--color-text-muted)]">שם לקוח *</span>
-              <input
-                className="field-underline"
-                inputMode="text"
-                placeholder="שם מלא"
-                value={meta.customer_name}
-                onChange={(e) => setMeta({ ...meta, customer_name: e.target.value })}
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm text-[var(--color-text-muted)]">📞 טלפון לקוח *</span>
-              <input
-                className="field-underline"
-                inputMode="tel"
-                placeholder="054-1234567"
-                value={meta.customer_phone}
-                onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm text-[var(--color-text-muted)]">📧 מייל לקוח *</span>
-              <input
-                className="field-underline"
-                inputMode="email"
-                placeholder="customer@example.com"
-                value={meta.customer_email}
-                onChange={(e) => setMeta({ ...meta, customer_email: e.target.value })}
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm text-[var(--color-text-muted)]">🏘️ רחוב ומספר *</span>
-              <input
-                className="field-underline"
-                inputMode="text"
-                placeholder="רחוב שטרן 15"
-                value={meta.customer_address_street}
-                onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm text-[var(--color-text-muted)]">🏙️ עיר *</span>
-              <input
-                className="field-underline"
-                inputMode="text"
-                placeholder="ירושלים"
-                value={meta.customer_address_city}
-                onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
-              />
-            </label>
-          </div>
+          ))}
         </div>
       )}
-
-      {/* ── סקציה 3: פרטי משלוח וטיפול ──────────────────────────────── */}
-      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="font-bold text-sm mb-4">🚚 משלוח וטיפול</div>
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">שיטת משלוח</span>
-            <select
-              className="field-underline"
-              value={meta.shipping_method}
-              onChange={(e) => setMeta({ ...meta, shipping_method: e.target.value })}
-            >
-              <option value="">בחר שיטת משלוח...</option>
-              <option value="איסוף עצמי">איסוף עצמי</option>
-              <option value="משלוח עד הבית">משלוח עד הבית</option>
-              <option value="אחר">אחר</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">📅 תאריך אספקה</span>
-            <input
-              type="date"
-              className="field-underline"
-              value={meta.delivery_date}
-              onChange={(e) => setMeta({ ...meta, delivery_date: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">💵 עלות משלוח (₪)</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              className="field-underline"
-              value={meta.shipping_cost}
-              onChange={(e) => setMeta({ ...meta, shipping_cost: e.target.value })}
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* ── סקציה 4: סכום הזמנה מקורי + הערות ──────────────────────── */}
-      <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="font-bold text-sm mb-4">💰 סכום ועיבוד</div>
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)] font-bold">סכום הזמנה מקורי (₪)</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              className="field-underline"
-              placeholder="כולל משלוח"
-              value={meta.original_total}
-              onChange={(e) => setMeta({ ...meta, original_total: e.target.value })}
-            />
-            <span className="text-xs text-[var(--color-text-muted)]">
-              ⚠️ הסכום צריך <strong>לכלול את עלות המשלוח</strong>
-            </span>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">💬 הערות כלליות</span>
-            <input
-              className="field-underline"
-              inputMode="text"
-              placeholder="לדוגמה: חלק מהמוצרים יגיע שבועות הבאות"
-              value={meta.note}
-              onChange={(e) => setMeta({ ...meta, note: e.target.value })}
-            />
-          </label>
-        </div>
-      </div>
-
-      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-[var(--color-border)] p-3">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!isComplete || saving}
-          className={`w-full rounded-xl font-bold py-3 text-lg transition-all ${
-            isComplete && !saving
-              ? "bg-[var(--color-brand)] text-white"
-              : "bg-[var(--color-bg-soft)] text-[var(--color-text-muted)] cursor-not-allowed"
-          }`}
-        >
-          {saving ? "שומר/ת..." : "✓ סיים ליקוט + הדפסה"}
-        </button>
-      </div>
     </div>
   );
 }
 
 export default function PosPage() {
   const router = useRouter();
-  const [phase, setPhase] = useState<Phase>("start");
+  const [phase, setPhase] = useState<Phase>("menu");
   const [meta, setMeta] = useState<SlipDraftMeta>(emptySlipDraftMeta());
+  const [draftId, setDraftId] = useState<number | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
   const [tab, setTab] = useState<Tab>("catalog");
   const [products, setProducts] = useState<Product[]>([]);
@@ -438,46 +501,115 @@ export default function PosPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // בכניסה למסך — בודקים אם קיימת טיוטה שמורה, ומציעים "המשך תעודה קיימת" (במקום לקפוץ אליה ישירות)
-  const [pendingDraft, setPendingDraft] = useState<Draft | null>(null);
-  const [draftChecked, setDraftChecked] = useState(false);
-
+  // בעליית הרכיב — אם יש טיוטה שנשמרה מקומית (רענון בטעות באמצע ליקוט), משחזרים אותה ישירות
   useEffect(() => {
-    // בדיקת localStorage חד-פעמית בעליית הרכיב — לא לולאת רינדור אמיתית.
-    const d = loadDraft();
-    if (d && (d.phase !== "start" || d.cart.length > 0)) {
+    const d = loadLocalDraft();
+    if (d) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPendingDraft(d);
+      setDraftId(d.draftId);
+      setMeta(d.meta);
+      setCart(d.cart);
+      setPhase("working");
     }
-    setDraftChecked(true);
   }, []);
 
-  // שמירה אוטומטית של הטיוטה בכל שינוי — כך שרענון בטעות לא ימחק את הליקוט
-  // (לא שומרים כל עוד יש הצעת "המשך תעודה קיימת" שלא טופלה, כדי לא לדרוס אותה)
+  // שמירה אוטומטית של הטיוטה הפעילה — מגנה מפני רענון בטעות
   useEffect(() => {
-    if (!draftChecked || pendingDraft) return;
-    saveDraft({ phase, meta, cart });
-  }, [phase, meta, cart, draftChecked, pendingDraft]);
+    if (phase !== "working" || draftId === null) return;
+    saveLocalDraft({ draftId, meta, cart });
+  }, [phase, draftId, meta, cart]);
 
-  function resumeDraft() {
-    if (!pendingDraft) return;
-    setPhase(pendingDraft.phase === "start" ? "working" : pendingDraft.phase);
-    setMeta(pendingDraft.meta);
-    setCart(pendingDraft.cart);
-    setPendingDraft(null);
+  // סנכרון שוטף של העגלה לשרת — כדי ש"המשך ליקוט קיים" יהיה עדכני מכל מכשיר
+  useEffect(() => {
+    if (phase !== "working" || draftId === null) return;
+    const controller = new AbortController();
+    fetch(`/api/slips/${draftId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: cart, status: "draft" }),
+      signal: controller.signal,
+    }).catch(() => {});
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, draftId]);
+
+  async function handleCreateOrder() {
+    setStarting(true);
+    setStartError(null);
+    try {
+      const res = await fetch("/api/slips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_number: meta.order_number || null,
+          customer_type: meta.customer_type,
+          customer_name: meta.customer_type === "specific" ? meta.customer_name : null,
+          picker_name: meta.picker_name || null,
+          customer_phone: meta.customer_phone || null,
+          customer_address_street: meta.customer_address_street || null,
+          customer_address_city: meta.customer_address_city || null,
+          shipping_method: meta.shipping_method || null,
+          shipping_cost: meta.shipping_method === "delivery" && !meta.shipping_free ? meta.shipping_cost || null : null,
+          note: meta.note || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStartError(data.error || "שגיאה בפתיחת התעודה");
+        setStarting(false);
+        return;
+      }
+      setDraftId(data.id);
+      setPhase("working");
+      setTab("catalog");
+      setStarting(false);
+    } catch {
+      setStartError("בעיית תקשורת — יש לבדוק חיבור ולנסות שוב");
+      setStarting(false);
+    }
+  }
+
+  async function handleResumeDraft(id: number) {
+    try {
+      const res = await fetch(`/api/slips/${id}`);
+      const data = await res.json();
+      if (!res.ok) return;
+      setDraftId(data.id);
+      setMeta(slipToMeta(data));
+      setCart((data.items as SlipItem[]).map(slipToCartItem));
+      setPhase("working");
+      setTab("cart");
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleDeleteDraft(id: number) {
+    if (!window.confirm("למחוק תעודה זו לצמיתות?")) return;
+    try {
+      await fetch(`/api/slips/${id}`, { method: "DELETE" });
+      // רענון הרשימה — פשוט חוזרים למסך הרשימה מחדש
+      setPhase("menu");
+      setTimeout(() => setPhase("resume-list"), 0);
+    } catch {
+      // ignore
+    }
   }
 
   function resetDraft() {
     if (!window.confirm("לבטל את התעודה הנוכחית ולהתחיל מחדש? כל הפריטים שנוספו יימחקו.")) return;
-    clearDraft();
-    setPhase("start");
+    if (draftId !== null) {
+      fetch(`/api/slips/${draftId}`, { method: "DELETE" }).catch(() => {});
+    }
+    clearLocalDraft();
+    setPhase("menu");
     setMeta(emptySlipDraftMeta());
     setCart([]);
+    setDraftId(null);
     setTab("catalog");
     setEditing(null);
     setKeypadFlow(null);
     setSaveError(null);
-    setPendingDraft(null);
   }
 
   useEffect(() => {
@@ -581,33 +713,22 @@ export default function PosPage() {
     setEditing(null);
   }
 
-  async function handleSaveSlip() {
+  async function handleFinishSlip() {
     if (cart.length === 0) {
       setSaveError("העגלה ריקה");
+      return;
+    }
+    if (draftId === null) {
+      setSaveError("שגיאה — לא נמצאה תעודה פעילה");
       return;
     }
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await fetch("/api/slips", {
-        method: "POST",
+      const res = await fetch(`/api/slips/${draftId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cart,
-          mode: meta.mode,
-          order_number: meta.order_number || null,
-          customer_name: meta.customer_name || null,
-          customer_phone: meta.customer_phone || null,
-          customer_email: meta.customer_email || null,
-          customer_address_street: meta.customer_address_street || null,
-          customer_address_city: meta.customer_address_city || null,
-          customer_address: meta.customer_address || null,
-          shipping_method: meta.shipping_method || null,
-          delivery_date: meta.delivery_date || null,
-          shipping_cost: meta.shipping_cost || null,
-          note: meta.note || null,
-          original_total: meta.mode === "linked" ? meta.original_total || null : null,
-        }),
+        body: JSON.stringify({ items: cart, status: "completed" }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -615,7 +736,7 @@ export default function PosPage() {
         setSaving(false);
         return;
       }
-      clearDraft();
+      clearLocalDraft();
       router.push(`/slips/${data.id}/print`);
     } catch {
       setSaveError("בעיית תקשורת — יש לבדוק חיבור ולנסות שוב");
@@ -623,36 +744,48 @@ export default function PosPage() {
     }
   }
 
-  if (phase === "start") {
+  if (phase === "menu") {
     return (
       <div className="min-h-screen flex flex-col">
         <AppHeader title="תעודה חדשה" backHref="/" />
-        <StartScreen
+        <MenuScreen onNew={() => setPhase("order-form")} onResume={() => setPhase("resume-list")} />
+      </div>
+    );
+  }
+
+  if (phase === "order-form") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <AppHeader title="פרטי הזמנה" backHref="/pos" />
+        <OrderForm
           meta={meta}
           setMeta={setMeta}
-          onStart={() => {
-            setPendingDraft(null);
-            setPhase("working");
-          }}
-          pendingDraft={pendingDraft}
-          onResume={resumeDraft}
+          onBack={() => setPhase("menu")}
+          onStart={handleCreateOrder}
+          starting={starting}
+          startError={startError}
         />
       </div>
     );
   }
 
-  if (phase === "finish") {
+  if (phase === "resume-list") {
     return (
       <div className="min-h-screen flex flex-col">
-        <AppHeader title="סיום ליקוט" backHref="/pos" />
-        <FinishScreen meta={meta} setMeta={setMeta} onSave={handleSaveSlip} />
+        <AppHeader title="המשך ליקוט קיים" backHref="/pos" />
+        <ResumeListScreen onResume={handleResumeDraft} onDelete={handleDeleteDraft} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader title={meta.mode === "linked" ? `הזמנה ${meta.order_number || ""}` : "ליקוט עצמאי"} backHref="/pos" />
+      <AppHeader
+        title={
+          (meta.order_number ? `#${meta.order_number} · ` : "") + (meta.customer_name || "לקוח כללי")
+        }
+        backHref="/pos"
+      />
 
       <div className="flex border-b border-[var(--color-border)] bg-white sticky top-14 z-10">
         <button
@@ -834,12 +967,6 @@ export default function PosPage() {
 
           <div className="fixed bottom-0 inset-x-0 bg-white border-t border-[var(--color-border)] p-3 flex flex-col gap-2">
             {saveError && <div className="text-sm text-[var(--color-danger)]">{saveError}</div>}
-            {meta.mode === "linked" && meta.original_total && (
-              <div className="flex items-center justify-between text-sm text-[var(--color-text-muted)] px-1">
-                <span>מחיר הזמנה מקורי</span>
-                <span>{fmt(Number(meta.original_total) || 0)}</span>
-              </div>
-            )}
             {missingItems.length > 0 && (
               <div className="text-xs text-[var(--color-danger)] px-1">
                 ✕ {missingItems.length} פריט{missingItems.length > 1 ? "ים" : ""} לא לוקטו
@@ -851,11 +978,11 @@ export default function PosPage() {
             </div>
             <button
               type="button"
-              onClick={() => setPhase("finish")}
-              disabled={cart.length === 0}
+              onClick={handleFinishSlip}
+              disabled={saving || cart.length === 0}
               className="rounded-xl bg-[var(--color-brand)] text-white font-bold py-3 text-lg disabled:opacity-50"
             >
-              ✓ סיום ליקוט
+              {saving ? "שומר/ת..." : "✓ סיום ליקוט + הדפסה"}
             </button>
           </div>
         </div>

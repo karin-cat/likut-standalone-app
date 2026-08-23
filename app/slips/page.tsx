@@ -10,7 +10,7 @@ function fmt(n: number): string {
 }
 
 export default async function SlipsHistoryPage() {
-  const rows = await sql`SELECT * FROM slips ORDER BY created_at DESC LIMIT 300`;
+  const rows = await sql`SELECT * FROM slips WHERE status = 'completed' ORDER BY created_at DESC LIMIT 300`;
   const slips = rows.map(normalizeSlip);
 
   return (

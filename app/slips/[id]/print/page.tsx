@@ -49,21 +49,25 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
         {new Date(slip.created_at).toLocaleString("he-IL")}
       </div>
 
-      {slip.mode === "linked" && (
-        <div className="text-sm mb-4 border-b border-[var(--color-border)] pb-3 flex flex-col gap-0.5">
-          {slip.order_number && <div>הזמנה #{slip.order_number}</div>}
-          {slip.customer_name && <div>👤 {slip.customer_name}</div>}
-          {slip.customer_phone && <div>📞 {slip.customer_phone}</div>}
-          {slip.customer_email && <div>📧 {slip.customer_email}</div>}
-          {slip.customer_address_street && <div>🏘️ {slip.customer_address_street}</div>}
-          {slip.customer_address_city && <div>🏙️ {slip.customer_address_city}</div>}
-          {slip.customer_address && <div>📍 {slip.customer_address}</div>}
-          {slip.shipping_method && <div>🚚 {slip.shipping_method}</div>}
-          {slip.delivery_date && <div>📅 {slip.delivery_date}</div>}
-          {slip.shipping_cost != null && <div>עלות משלוח: {fmt(Number(slip.shipping_cost))}</div>}
-          {slip.note && <div>💬 {slip.note}</div>}
-        </div>
-      )}
+      <div className="text-sm mb-4 border-b border-[var(--color-border)] pb-3 flex flex-col gap-0.5">
+        {slip.order_number && <div>הזמנה #{slip.order_number}</div>}
+        {slip.picker_name && <div>🧑‍💼 מלקט/ת: {slip.picker_name}</div>}
+        <div>👤 {slip.customer_name || "לקוח כללי"}</div>
+        {slip.customer_phone && <div>📞 {slip.customer_phone}</div>}
+        {slip.customer_email && <div>📧 {slip.customer_email}</div>}
+        {slip.customer_address_street && <div>🏘️ {slip.customer_address_street}</div>}
+        {slip.customer_address_city && <div>🏙️ {slip.customer_address_city}</div>}
+        {slip.customer_address && <div>📍 {slip.customer_address}</div>}
+        {slip.shipping_method && (
+          <div>
+            🚚 {slip.shipping_method}
+            {slip.shipping_method !== "איסוף עצמי" &&
+              (slip.shipping_cost ? ` — ${fmt(Number(slip.shipping_cost))}` : " — חינם")}
+          </div>
+        )}
+        {slip.delivery_date && <div>📅 {slip.delivery_date}</div>}
+        {slip.note && <div>💬 {slip.note}</div>}
+      </div>
 
       <table className="w-full text-sm border-collapse mb-3">
         <thead>
@@ -146,7 +150,7 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
               </td>
             </tr>
           )}
-          {missingItems.length > 0 && slip.mode !== "linked" && (
+          {missingItems.length > 0 && (
             <tr className="text-[var(--color-danger)] text-xs">
               <td className="py-1" colSpan={2}>
                 ✕ {missingItems.length} פריט{missingItems.length > 1 ? "ים" : ""} לא סופקו

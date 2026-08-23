@@ -37,6 +37,12 @@ export interface Product {
 export type SlipItemUnit = "kg" | "gram" | "unit";
 export type SlipItemStatus = "picked" | "missing";
 export type SlipMode = "linked" | "standalone";
+export type SlipStatus = "draft" | "completed";
+export type PickerName = "אליהו" | "בילי";
+export const PICKER_NAMES: { value: PickerName; label: string }[] = [
+  { value: "אליהו", label: "אליהו — מנהל" },
+  { value: "בילי", label: "בילי — עובד" },
+];
 
 export interface SlipItem {
   id: number;
@@ -60,6 +66,8 @@ export interface Slip {
   id: number;
   created_at: string;
   mode: SlipMode;
+  status: SlipStatus;
+  picker_name: string | null;
   order_number: string | null;
   customer_name: string | null;
   customer_phone: string | null;
@@ -98,38 +106,37 @@ export interface CartItem {
   missing_reason: string;
 }
 
-/** נתוני פתיחת תעודה — מצב + פרטי הזמנה (רק אם mode === 'linked'). */
+export type CustomerType = "general" | "specific";
+export type ShippingMethod = "pickup" | "delivery" | "";
+
+/** נתוני פתיחת תעודה — נאספים בהתחלה, לפני הליקוט. */
 export interface SlipDraftMeta {
-  mode: SlipMode;
   order_number: string;
+  customer_type: CustomerType;
   customer_name: string;
+  picker_name: PickerName | "";
   customer_phone: string;
-  customer_email: string;
   customer_address_street: string;
   customer_address_city: string;
-  customer_address: string;
-  shipping_method: string;
-  delivery_date: string;
-  shipping_cost: string; // טקסט בזמן עריכה, מומר למספר בשמירה
+  shipping_method: ShippingMethod;
+  shipping_free: boolean; // true = חינם, false = בתשלום (רלוונטי רק אם shipping_method === 'delivery')
+  shipping_cost: string; // טקסט בזמן עריכה, מומר למספר בשמירה — רלוונטי רק אם shipping_method === 'delivery' && !shipping_free
   note: string;
-  original_total: string; // טקסט בזמן עריכה, מומר למספר בשמירה
 }
 
 export function emptySlipDraftMeta(): SlipDraftMeta {
   return {
-    mode: "standalone",
     order_number: "",
+    customer_type: "general",
     customer_name: "",
+    picker_name: "",
     customer_phone: "",
-    customer_email: "",
     customer_address_street: "",
     customer_address_city: "",
-    customer_address: "",
     shipping_method: "",
-    delivery_date: "",
+    shipping_free: true,
     shipping_cost: "",
     note: "",
-    original_total: "",
   };
 }
 
