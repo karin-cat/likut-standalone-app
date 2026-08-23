@@ -780,7 +780,17 @@ export default function PosPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <AppHeader title="תעודה חדשה" backHref="/" />
-        <MenuScreen onNew={() => setPhase("order-form")} onResume={() => setPhase("resume-list")} />
+        <MenuScreen
+          onNew={() => {
+            // התחלת הזמנה חדשה — מנקים כל שארית של תעודה קודמת שלא הושלמה (היא עדיין שמורה בשרת, נגישה דרך "המשך ליקוט קיים")
+            clearLocalDraft();
+            setMeta(emptySlipDraftMeta());
+            setCart([]);
+            setDraftId(null);
+            setPhase("order-form");
+          }}
+          onResume={() => setPhase("resume-list")}
+        />
       </div>
     );
   }
