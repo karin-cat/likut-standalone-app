@@ -158,6 +158,39 @@ function MenuScreen({ onNew, onResume }: { onNew: () => void; onResume: () => vo
   );
 }
 
+// ── כרטיס שדה בטופס — מבהיר מיד מה חובה, מה לא, ומה כבר מולא ────────────────
+function FormSection({
+  icon,
+  title,
+  required,
+  done,
+  children,
+}: {
+  icon: string;
+  title: string;
+  required: boolean;
+  done: boolean;
+  children: React.ReactNode;
+}) {
+  const accent = required ? (done ? "border-r-4 border-r-[var(--color-brand)]" : "border-r-4 border-r-[var(--color-danger)]") : "";
+  return (
+    <div className={`mb-4 bg-white rounded-2xl border border-[var(--color-border)] p-4 ${accent}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="font-bold text-lg">
+          {icon} {title}
+        </span>
+        {required ? (
+          <span className="text-xs font-bold text-[var(--color-danger)]">* חובה</span>
+        ) : (
+          <span className="text-xs text-[var(--color-text-muted)]">לא חובה</span>
+        )}
+        {done && <span className="text-[var(--color-brand)] font-bold text-base">✓</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ── מסך פתיחת הזמנה — כל הפרטים נאספים כאן, לפני תחילת הליקוט ──────────────
 function OrderForm({
   meta,
@@ -195,6 +228,11 @@ function OrderForm({
   }
 
   const isComplete = !!meta.picker_name && (meta.customer_type === "general" || meta.customer_name.trim() !== "");
+  const customerDone = meta.customer_type === "general" || meta.customer_name.trim() !== "";
+  const pickerDone = !!meta.picker_name;
+  const contactFilled = !!(meta.customer_phone || meta.customer_address_street || meta.customer_address_city);
+  const shippingFilled = !!meta.shipping_method;
+  const noteFilled = !!meta.note;
 
   return (
     <div className="flex-1 overflow-y-auto p-4 pb-28">
@@ -203,30 +241,27 @@ function OrderForm({
       </div>
 
       {/* ── מספר הזמנה ─────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">מספר הזמנה</span>
-          <input
-            className="field-underline text-xl font-bold"
-            type="text"
-            placeholder="הזני מספר או צרי אחד"
-            value={meta.order_number}
-            onChange={(e) => setMeta({ ...meta, order_number: e.target.value })}
-          />
-        </label>
+      <FormSection icon="🔢" title="מספר הזמנה" required={false} done={!!meta.order_number.trim()}>
+        <input
+          className="field-underline text-3xl font-bold text-center tracking-wide"
+          type="text"
+          inputMode="numeric"
+          placeholder="הזני מספר או צרי אחד"
+          value={meta.order_number}
+          onChange={(e) => setMeta({ ...meta, order_number: e.target.value })}
+        />
         <button
           type="button"
           onClick={generateOrderNumber}
           disabled={generatingOrderNumber}
-          className="mt-2 w-full rounded-xl border border-[var(--color-brand)] text-[var(--color-brand)] font-bold py-2.5 disabled:opacity-50"
+          className="mt-3 w-full rounded-xl border border-[var(--color-brand)] text-[var(--color-brand)] font-bold py-2.5 disabled:opacity-50"
         >
           {generatingOrderNumber ? "יוצר/ת..." : "✨ צור לי מספר הזמנה"}
         </button>
-      </div>
+      </FormSection>
 
       {/* ── שם לקוח ─────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="font-bold text-lg mb-3">👤 שם לקוח</div>
+      <FormSection icon="👤" title="שם לקוח" required done={customerDone}>
         <div className="flex gap-2 mb-3">
           <button
             type="button"
@@ -261,11 +296,10 @@ function OrderForm({
             autoFocus
           />
         )}
-      </div>
+      </FormSection>
 
       {/* ── שם המלקט ────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="font-bold text-lg mb-3">🧑‍💼 שם המלקט/ת</div>
+      <FormSection icon="🧑‍💼" title="שם המלקט/ת" required done={pickerDone}>
         <div className="flex gap-2">
           {PICKER_NAMES.map((p) => (
             <button
@@ -282,11 +316,10 @@ function OrderForm({
             </button>
           ))}
         </div>
-      </div>
+      </FormSection>
 
       {/* ── פרטי קשר — אופציונלי ───────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">פרטי קשר (לא חובה)</div>
+      <FormSection icon="📞" title="פרטי קשר" required={false} done={contactFilled}>
         <div className="flex flex-col gap-2">
           <label className="flex flex-col gap-0.5">
             <span className="text-xs text-[var(--color-text-muted)]">📞 טלפון</span>
@@ -317,11 +350,10 @@ function OrderForm({
             />
           </label>
         </div>
-      </div>
+      </FormSection>
 
       {/* ── שיטת אספקה ──────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="font-bold text-lg mb-3">🚚 שיטת אספקה</div>
+      <FormSection icon="🚚" title="שיטת אספקה" required={false} done={shippingFilled}>
         <div className="flex gap-2 mb-3">
           <button
             type="button"
@@ -388,20 +420,17 @@ function OrderForm({
             )}
           </div>
         )}
-      </div>
+      </FormSection>
 
       {/* ── הערה ללקוח ──────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">💬 הערה ללקוח (לא חובה)</span>
-          <input
-            className="field-underline"
-            placeholder="לדוגמה: להתקשר לפני האספקה"
-            value={meta.note}
-            onChange={(e) => setMeta({ ...meta, note: e.target.value })}
-          />
-        </label>
-      </div>
+      <FormSection icon="💬" title="הערה ללקוח" required={false} done={noteFilled}>
+        <input
+          className="field-underline"
+          placeholder="לדוגמה: להתקשר לפני האספקה"
+          value={meta.note}
+          onChange={(e) => setMeta({ ...meta, note: e.target.value })}
+        />
+      </FormSection>
 
       {startError && <div className="text-sm text-[var(--color-danger)] mb-3 text-center">{startError}</div>}
 
