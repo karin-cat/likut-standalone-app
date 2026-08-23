@@ -18,6 +18,17 @@ function cartQtyLabel(it: CartItem): string {
   return `${it.qty} ${unitLabel}`;
 }
 
+// עבור מוצרי "מארז" (שקילה בטווח ידוע) — מציג למלקט/ת בדיוק מה שהוצג ללקוח, כדי שידעו איזה מוצר זה
+function packageNoteFor(p: Product | undefined): string | null {
+  if (!p || p.pricing_type !== "package") return null;
+  const parts: string[] = [];
+  if (p.package_description) parts.push(p.package_description);
+  if (p.package_estimated_weight_min != null && p.package_estimated_weight_max != null) {
+    parts.push(`משקל משוער: ${p.package_estimated_weight_min}–${p.package_estimated_weight_max} ק"ג`);
+  }
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 type Phase = "menu" | "order-form" | "resume-list" | "working";
 type Tab = "catalog" | "cart";
 
@@ -580,7 +591,7 @@ export default function PosPage() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [editing, setEditing] = useState<{ index: number | null; item: CartItem } | null>(null);
-  const [keypadFlow, setKeypadFlow] = useState<{ item: CartItem; stage: "primary" | "clean" } | null>(null);
+  const [keypadFlow, setKeypadFlow] = useState<{ item: CartItem; stage: "primary" | "clean"; product?: Product } | null>(null);
   const [duplicatePrompt, setDuplicatePrompt] = useState<{ newItem: CartItem; existingIndex: number } | null>(null);
 
   const [saving, setSaving] = useState(false);
@@ -743,7 +754,7 @@ export default function PosPage() {
 
   // ── זרימת מקלדת מסך-מלא — הדרך המהירה להוסיף מוצר מהקטלוג ──────────────────
   function openKeypadForProduct(p: Product) {
-    setKeypadFlow({ item: productToCartItem(p), stage: "primary" });
+    setKeypadFlow({ item: productToCartItem(p), stage: "primary", product: p });
   }
 
   // מוסיף פריט חדש לעגלה — אם אותו מוצר כבר קיים בעגלה, שואל האם למזג לשורה אחת או להוסיף בנפרד
@@ -1038,6 +1049,9 @@ export default function PosPage() {
                       {p.requires_cleaning && <span className="text-amber-600"> ⚠️</span>}
                     </div>
                     {p.sku && <div className="text-xs text-[var(--color-text-muted)]">מק&quot;ט {p.sku}</div>}
+                    {packageNoteFor(p) && (
+                      <div className="text-xs text-amber-700 truncate">📦 {packageNoteFor(p)}</div>
+                    )}
                   </div>
                   <div className="font-bold shrink-0 text-left">
                     {p.is_on_sale && p.sale_price ? (
@@ -1162,6 +1176,7 @@ export default function PosPage() {
           }
           allowGramToggle={keypadFlow.item.unit !== "unit"}
           initialValue={keypadFlow.item.unit === "unit" ? "1" : ""}
+          packageNote={packageNoteFor(keypadFlow.product)}
           onConfirm={handleKeypadPrimaryConfirm}
           onClose={() => setKeypadFlow(null)}
           onMoreOptions={handleKeypadMoreOptions}

@@ -12,6 +12,7 @@ export default function WeightKeypad({
   onMoreOptions,
   initialValue,
   allowGramToggle = false,
+  packageNote,
 }: {
   title: string;
   label: string;
@@ -20,6 +21,7 @@ export default function WeightKeypad({
   onMoreOptions?: () => void;
   initialValue?: string;
   allowGramToggle?: boolean;
+  packageNote?: string | null;
 }) {
   const [digits, setDigits] = useState(initialValue || "");
   const [entryUnit, setEntryUnit] = useState<"kg" | "gram">("kg");
@@ -81,6 +83,12 @@ export default function WeightKeypad({
         <div className="font-bold text-lg truncate">{title}</div>
         <span className="w-8" />
       </div>
+
+      {packageNote && (
+        <div className="mx-6 mt-4 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 text-sm text-amber-900">
+          📦 {packageNote}
+        </div>
+      )}
 
       <div className="px-6 pb-6 pt-5">
         <div className="flex items-center justify-between mb-1">
