@@ -227,7 +227,10 @@ function OrderForm({
     }
   }
 
-  const isComplete = !!meta.picker_name && (meta.customer_type === "general" || meta.customer_name.trim() !== "");
+  const isComplete =
+    !!meta.picker_name &&
+    !!meta.shipping_method &&
+    (meta.customer_type === "general" || meta.customer_name.trim() !== "");
   const customerDone = meta.customer_type === "general" || meta.customer_name.trim() !== "";
   const pickerDone = !!meta.picker_name;
   const contactFilled = !!(meta.customer_phone || meta.customer_address_street || meta.customer_address_city);
@@ -318,42 +321,8 @@ function OrderForm({
         </div>
       </FormSection>
 
-      {/* ── פרטי קשר — אופציונלי ───────────────────────────────────── */}
-      <FormSection icon="📞" title="פרטי קשר" required={false} done={contactFilled}>
-        <div className="flex flex-col gap-2">
-          <label className="flex flex-col gap-0.5">
-            <span className="text-xs text-[var(--color-text-muted)]">📞 טלפון</span>
-            <input
-              className="field-underline text-sm py-2"
-              inputMode="tel"
-              placeholder="054-1234567"
-              value={meta.customer_phone}
-              onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-0.5">
-            <span className="text-xs text-[var(--color-text-muted)]">🏘️ רחוב ומספר</span>
-            <input
-              className="field-underline text-sm py-2"
-              placeholder="רחוב שטרן 15"
-              value={meta.customer_address_street}
-              onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-0.5">
-            <span className="text-xs text-[var(--color-text-muted)]">🏙️ עיר</span>
-            <input
-              className="field-underline text-sm py-2"
-              placeholder="ירושלים"
-              value={meta.customer_address_city}
-              onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
-            />
-          </label>
-        </div>
-      </FormSection>
-
       {/* ── שיטת אספקה ──────────────────────────────────────────────── */}
-      <FormSection icon="🚚" title="שיטת אספקה" required={false} done={shippingFilled}>
+      <FormSection icon="🚚" title="שיטת אספקה" required done={shippingFilled}>
         <div className="flex gap-2 mb-3">
           <button
             type="button"
@@ -422,11 +391,45 @@ function OrderForm({
         )}
       </FormSection>
 
+      {/* ── פרטי קשר — אופציונלי ───────────────────────────────────── */}
+      <FormSection icon="📞" title="פרטי קשר" required={false} done={contactFilled}>
+        <div className="flex flex-col gap-2">
+          <label className="flex flex-col gap-0.5">
+            <span className="text-xs text-[var(--color-text-muted)]">📞 טלפון</span>
+            <input
+              className="field-underline text-sm py-2"
+              inputMode="tel"
+              placeholder="054-1234567"
+              value={meta.customer_phone}
+              onChange={(e) => setMeta({ ...meta, customer_phone: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-0.5">
+            <span className="text-xs text-[var(--color-text-muted)]">🏘️ רחוב ומספר</span>
+            <input
+              className="field-underline text-sm py-2"
+              placeholder="רחוב שטרן 15"
+              value={meta.customer_address_street}
+              onChange={(e) => setMeta({ ...meta, customer_address_street: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-0.5">
+            <span className="text-xs text-[var(--color-text-muted)]">🏙️ עיר</span>
+            <input
+              className="field-underline text-sm py-2"
+              placeholder="ירושלים"
+              value={meta.customer_address_city}
+              onChange={(e) => setMeta({ ...meta, customer_address_city: e.target.value })}
+            />
+          </label>
+        </div>
+      </FormSection>
+
       {/* ── הערה ללקוח ──────────────────────────────────────────────── */}
       <FormSection icon="💬" title="הערה ללקוח" required={false} done={noteFilled}>
         <input
           className="field-underline"
-          placeholder="לדוגמה: להתקשר לפני האספקה"
+          placeholder="למשל: להתקשר לפני אספקה / להוסיף 1 ק&quot;ג כנפיים הודו"
           value={meta.note}
           onChange={(e) => setMeta({ ...meta, note: e.target.value })}
         />
@@ -785,7 +788,7 @@ export default function PosPage() {
   if (phase === "order-form") {
     return (
       <div className="min-h-screen flex flex-col">
-        <AppHeader title="פרטי הזמנה" backHref="/pos" />
+        <AppHeader title="פרטי הזמנה" onBack={() => setPhase("menu")} />
         <OrderForm
           meta={meta}
           setMeta={setMeta}
@@ -801,7 +804,7 @@ export default function PosPage() {
   if (phase === "resume-list") {
     return (
       <div className="min-h-screen flex flex-col">
-        <AppHeader title="המשך ליקוט קיים" backHref="/pos" />
+        <AppHeader title="המשך ליקוט קיים" onBack={() => setPhase("menu")} />
         <ResumeListScreen onResume={handleResumeDraft} onDelete={handleDeleteDraft} />
       </div>
     );
@@ -813,7 +816,7 @@ export default function PosPage() {
         title={
           (meta.order_number ? `#${meta.order_number} · ` : "") + (meta.customer_name || "לקוח כללי")
         }
-        backHref="/pos"
+        onBack={() => setPhase("menu")}
       />
 
       <div className="flex border-b border-[var(--color-border)] bg-white sticky top-14 z-10">

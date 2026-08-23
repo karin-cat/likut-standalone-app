@@ -14,9 +14,11 @@ const MENU_LINKS = [
 export default function AppHeader({
   title,
   backHref,
+  onBack,
 }: {
   title: string;
   backHref?: string;
+  onBack?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -30,7 +32,11 @@ export default function AppHeader({
   return (
     <div className="sticky top-0 z-20">
       <div className="bg-[var(--color-brand)] text-white flex items-center justify-between px-3 h-14 shadow-sm">
-        {backHref ? (
+        {onBack ? (
+          <button type="button" onClick={onBack} className="text-2xl px-1" aria-label="חזרה">
+            →
+          </button>
+        ) : backHref ? (
           <Link href={backHref} className="text-2xl px-1" aria-label="חזרה">
             →
           </Link>
