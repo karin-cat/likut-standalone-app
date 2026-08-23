@@ -59,13 +59,12 @@ export default function WeightKeypad({
   }
 
   function increment() {
-    const current = parseFloat(digits) || 0;
-    setDigits(step3(current + step));
+    // עדכון פונקציונלי — כדי שלחיצות מהירות ברצף (טאבל-טאב) לא "יבלעו" זו את זו
+    setDigits((d) => step3((parseFloat(d) || 0) + step));
   }
 
   function decrement() {
-    const current = parseFloat(digits) || 0;
-    setDigits(step3(Math.max(0, current - step)));
+    setDigits((d) => step3(Math.max(0, (parseFloat(d) || 0) - step)));
   }
 
   // לחיצה על התצוגה הגדולה — מנקה כדי שאפשר יהיה להתחיל להקליד ערך חדש מאפס
