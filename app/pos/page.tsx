@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import ItemEditModal from "@/components/ItemEditModal";
@@ -199,6 +199,9 @@ function OrderForm({
   onStart,
   starting,
   startError,
+  orderNumberTaken,
+  onDismissError,
+  onGoToResumeList,
 }: {
   meta: SlipDraftMeta;
   setMeta: (m: SlipDraftMeta) => void;
@@ -206,8 +209,12 @@ function OrderForm({
   onStart: () => void;
   starting: boolean;
   startError: string | null;
+  orderNumberTaken: boolean;
+  onDismissError: () => void;
+  onGoToResumeList: () => void;
 }) {
   const [generatingOrderNumber, setGeneratingOrderNumber] = useState(false);
+  const orderNumberRef = useRef<HTMLInputElement>(null);
   const now = useMemo(() => new Date(), []);
   const dateLabel = now.toLocaleDateString("he-IL", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
   const timeLabel = now.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
@@ -246,7 +253,10 @@ function OrderForm({
       {/* ── מספר הזמנה ─────────────────────────────────────────────── */}
       <FormSection icon="🔢" title="מספר הזמנה" required={false} done={!!meta.order_number.trim()}>
         <input
-          className="field-underline text-3xl font-bold text-center tracking-wide"
+          ref={orderNumberRef}
+          className={`field-underline text-3xl font-bold text-center tracking-wide ${
+            orderNumberTaken ? "border-b-[var(--color-danger)]" : ""
+          }`}
           type="text"
           inputMode="numeric"
           placeholder="הזני מספר או צרי אחד"
@@ -435,8 +445,6 @@ function OrderForm({
         />
       </FormSection>
 
-      {startError && <div className="text-sm text-[var(--color-danger)] mb-3 text-center">{startError}</div>}
-
       <div className="fixed bottom-0 inset-x-0 bg-white border-t border-[var(--color-border)] p-3 flex gap-2">
         <button
           type="button"
@@ -454,6 +462,44 @@ function OrderForm({
           {starting ? "מתחיל/ה..." : "התחל ליקוט →"}
         </button>
       </div>
+
+      {startError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-xs text-center shadow-xl">
+            <div className="text-3xl mb-2">⚠️</div>
+            <div className="font-bold text-lg mb-4">{startError}</div>
+            {orderNumberTaken ? (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDismissError();
+                    setTimeout(() => orderNumberRef.current?.focus(), 0);
+                  }}
+                  className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold py-3"
+                >
+                  ✏️ שינוי מספר הזמנה
+                </button>
+                <button
+                  type="button"
+                  onClick={onGoToResumeList}
+                  className="w-full rounded-xl border border-[var(--color-border)] font-bold py-3"
+                >
+                  📋 מעבר לתעודות שמורות
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onDismissError}
+                className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold py-3"
+              >
+                הבנתי
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -519,6 +565,7 @@ export default function PosPage() {
   const [draftId, setDraftId] = useState<number | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [orderNumberTaken, setOrderNumberTaken] = useState(false);
 
   const [tab, setTab] = useState<Tab>("catalog");
   const [products, setProducts] = useState<Product[]>([]);
@@ -568,6 +615,7 @@ export default function PosPage() {
   async function handleCreateOrder() {
     setStarting(true);
     setStartError(null);
+    setOrderNumberTaken(false);
     try {
       const res = await fetch("/api/slips", {
         method: "POST",
@@ -588,6 +636,7 @@ export default function PosPage() {
       const data = await res.json();
       if (!res.ok) {
         setStartError(data.error || "שגיאה בפתיחת התעודה");
+        setOrderNumberTaken(res.status === 409);
         setStarting(false);
         return;
       }
@@ -806,6 +855,12 @@ export default function PosPage() {
           onStart={handleCreateOrder}
           starting={starting}
           startError={startError}
+          orderNumberTaken={orderNumberTaken}
+          onDismissError={() => setStartError(null)}
+          onGoToResumeList={() => {
+            setStartError(null);
+            setPhase("resume-list");
+          }}
         />
       </div>
     );
