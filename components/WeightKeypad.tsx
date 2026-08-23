@@ -73,7 +73,7 @@ export default function WeightKeypad({
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-white flex flex-col">
+    <div className="fixed inset-0 z-40 bg-white flex flex-col overflow-y-auto">
       <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--color-border)] shrink-0">
         <button type="button" onClick={onClose} className="text-2xl w-8 text-[var(--color-text-muted)]" aria-label="סגירה">
           ✕
@@ -157,11 +157,11 @@ export default function WeightKeypad({
         )}
       </div>
 
-      <div className="px-4 py-3 border-t border-[var(--color-border)] shrink-0">
+      <div className="px-4 py-2 border-t border-[var(--color-border)] shrink-0">
         <button
           type="button"
           onClick={handleConfirm}
-          className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold text-xl py-3.5"
+          className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold text-xl py-2.5"
         >
           ✓ אשר
         </button>
@@ -173,7 +173,7 @@ export default function WeightKeypad({
             key={k}
             type="button"
             onClick={() => pressKey(k)}
-            className="h-20 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)]"
+            className="h-16 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)]"
           >
             {k}
           </button>
