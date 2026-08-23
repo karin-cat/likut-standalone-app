@@ -82,7 +82,7 @@ export default function WeightKeypad({
         <span className="w-8" />
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col justify-end px-6 pb-6 pt-5">
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col justify-start px-6 pb-6 pt-5">
         <div className="flex items-center justify-between mb-1">
           <div className="text-sm text-[var(--color-text-muted)]">
             {label} {allowGramToggle ? `(${entryUnit === "kg" ? 'ק"ג' : "גרם"})` : ""}
