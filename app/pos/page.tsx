@@ -13,6 +13,11 @@ function fmt(n: number): string {
   return "₪" + n.toFixed(2);
 }
 
+function cartQtyLabel(it: CartItem): string {
+  const unitLabel = it.unit === "kg" ? 'ק"ג' : it.unit === "gram" ? "גרם" : "יח'";
+  return `${it.qty} ${unitLabel}`;
+}
+
 type Phase = "menu" | "order-form" | "resume-list" | "working";
 type Tab = "catalog" | "cart";
 
@@ -576,6 +581,7 @@ export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [editing, setEditing] = useState<{ index: number | null; item: CartItem } | null>(null);
   const [keypadFlow, setKeypadFlow] = useState<{ item: CartItem; stage: "primary" | "clean" } | null>(null);
+  const [duplicatePrompt, setDuplicatePrompt] = useState<{ newItem: CartItem; existingIndex: number } | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -740,6 +746,54 @@ export default function PosPage() {
     setKeypadFlow({ item: productToCartItem(p), stage: "primary" });
   }
 
+  // מוסיף פריט חדש לעגלה — אם אותו מוצר כבר קיים בעגלה, שואל האם למזג לשורה אחת או להוסיף בנפרד
+  // (יכול להיות באמת מוצר שונה — חיתוך אחר, או הזמנה נפרדת בשביל מישהו אחר)
+  function addNewItemToCart(item: CartItem) {
+    if (item.product_id !== null) {
+      const existingIndex = cart.findIndex((it) => it.product_id === item.product_id && it.status !== "missing");
+      if (existingIndex !== -1) {
+        setDuplicatePrompt({ newItem: item, existingIndex });
+        return;
+      }
+    }
+    setCart((prev) => [...prev, item]);
+    setTab("cart");
+    setSearch("");
+  }
+
+  function handleMergeDuplicate() {
+    if (!duplicatePrompt) return;
+    const { newItem, existingIndex } = duplicatePrompt;
+    setCart((prev) =>
+      prev.map((it, i) => {
+        if (i !== existingIndex) return it;
+        return {
+          ...it,
+          qty: (Number(it.qty) || 0) + (Number(newItem.qty) || 0),
+          ordered_weight:
+            it.ordered_weight != null || newItem.ordered_weight != null
+              ? (Number(it.ordered_weight) || 0) + (Number(newItem.ordered_weight) || 0)
+              : null,
+          actual_weight_for_billing:
+            it.actual_weight_for_billing != null || newItem.actual_weight_for_billing != null
+              ? (Number(it.actual_weight_for_billing) || 0) + (Number(newItem.actual_weight_for_billing) || 0)
+              : null,
+        };
+      })
+    );
+    setDuplicatePrompt(null);
+    setTab("cart");
+    setSearch("");
+  }
+
+  function handleAddSeparateDuplicate() {
+    if (!duplicatePrompt) return;
+    setCart((prev) => [...prev, duplicatePrompt.newItem]);
+    setDuplicatePrompt(null);
+    setTab("cart");
+    setSearch("");
+  }
+
   function handleKeypadPrimaryConfirm(value: number) {
     if (!keypadFlow) return;
     const item: CartItem = {
@@ -750,10 +804,8 @@ export default function PosPage() {
     if (item.requires_cleaning) {
       setKeypadFlow({ item, stage: "clean" });
     } else {
-      setCart((prev) => [...prev, item]);
       setKeypadFlow(null);
-      setTab("cart");
-      setSearch("");
+      addNewItemToCart(item);
     }
   }
 
@@ -779,14 +831,15 @@ export default function PosPage() {
   }
 
   function handleSaveItem(updated: CartItem) {
-    if (editing?.index === null || editing?.index === undefined) {
-      setCart((prev) => [...prev, updated]);
+    const isNew = editing?.index === null || editing?.index === undefined;
+    setEditing(null);
+    if (isNew) {
+      addNewItemToCart(updated);
     } else {
       setCart((prev) => prev.map((it, i) => (i === editing.index ? updated : it)));
+      setTab("cart");
+      setSearch("");
     }
-    setEditing(null);
-    setTab("cart");
-    setSearch("");
   }
 
   function handleDeleteItem() {
@@ -1122,6 +1175,43 @@ export default function PosPage() {
           onConfirm={handleKeypadCleanConfirm}
           onClose={() => setKeypadFlow(null)}
         />
+      )}
+
+      {duplicatePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-xs text-center shadow-xl">
+            <div className="text-3xl mb-2">🔄</div>
+            <div className="font-bold text-lg mb-1">{duplicatePrompt.newItem.name}</div>
+            <div className="text-sm text-[var(--color-text-muted)] mb-4">
+              כבר יש שורה כזו בעגלה — {cartQtyLabel(cart[duplicatePrompt.existingIndex])}
+              <br />
+              מוסיפים עכשיו: {cartQtyLabel(duplicatePrompt.newItem)}
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleMergeDuplicate}
+                className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold py-3"
+              >
+                🔗 מיזוג לשורה אחת
+              </button>
+              <button
+                type="button"
+                onClick={handleAddSeparateDuplicate}
+                className="w-full rounded-xl border border-[var(--color-border)] font-bold py-3"
+              >
+                ➕ הוספה כשורה נפרדת
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuplicatePrompt(null)}
+                className="text-sm text-[var(--color-text-muted)] py-1"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
