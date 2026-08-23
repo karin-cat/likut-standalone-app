@@ -753,6 +753,7 @@ export default function PosPage() {
       setCart((prev) => [...prev, item]);
       setKeypadFlow(null);
       setTab("cart");
+      setSearch("");
     }
   }
 
@@ -785,6 +786,7 @@ export default function PosPage() {
     }
     setEditing(null);
     setTab("cart");
+    setSearch("");
   }
 
   function handleDeleteItem() {
@@ -890,7 +892,7 @@ export default function PosPage() {
           onClick={() => setTab("catalog")}
           className={`flex-1 py-3 font-bold ${tab === "catalog" ? "text-[var(--color-brand)] border-b-2 border-[var(--color-brand)]" : "text-[var(--color-text-muted)]"}`}
         >
-          🧺 קטלוג
+          🧺 קטלוג ➕
         </button>
         <button
           type="button"
