@@ -50,6 +50,29 @@ export default function WeightKeypad({
     setDigits((d) => d.slice(0, -1));
   }
 
+  // צעד ההעלאה/הורדה בטוגל +/- : יחידות שלמות ליחידה, 100 גרם / 0.1 ק"ג למוצרי משקל
+  const step = !allowGramToggle ? 1 : entryUnit === "gram" ? 50 : 0.1;
+
+  function step3(n: number): string {
+    const rounded = Math.round(n * 1000) / 1000;
+    return String(rounded);
+  }
+
+  function increment() {
+    const current = parseFloat(digits) || 0;
+    setDigits(step3(current + step));
+  }
+
+  function decrement() {
+    const current = parseFloat(digits) || 0;
+    setDigits(step3(Math.max(0, current - step)));
+  }
+
+  // לחיצה על התצוגה הגדולה — מנקה כדי שאפשר יהיה להתחיל להקליד ערך חדש מאפס
+  function clearDigits() {
+    setDigits("");
+  }
+
   return (
     <div className="fixed inset-0 z-40 bg-white flex flex-col">
       <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--color-border)] shrink-0">
@@ -93,15 +116,40 @@ export default function WeightKeypad({
           )}
         </div>
         <div className="flex items-center justify-between">
-          <div className="text-6xl font-bold tabular-nums">{digits || "0"}</div>
           <button
             type="button"
-            onClick={backspace}
-            className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-xl shrink-0"
-            aria-label="מחיקה"
+            onClick={clearDigits}
+            className="text-6xl font-bold tabular-nums text-right"
+            aria-label="ניקוי כדי להקליד ערך חדש"
           >
-            ⌫
+            {digits || "0"}
           </button>
+          <div className="flex flex-col gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={increment}
+              className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl font-bold text-[var(--color-brand)]"
+              aria-label="הוספת יחידה"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={backspace}
+              className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-xl"
+              aria-label="מחיקה"
+            >
+              ⌫
+            </button>
+            <button
+              type="button"
+              onClick={decrement}
+              className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl font-bold text-[var(--color-text-muted)]"
+              aria-label="הפחתת יחידה"
+            >
+              −
+            </button>
+          </div>
         </div>
         {onMoreOptions && (
           <button type="button" onClick={onMoreOptions} className="mt-4 text-sm text-[var(--color-brand-dark)] font-bold self-start">
