@@ -1073,6 +1073,9 @@ export default function PosPage() {
                       {p.requires_cleaning && <span className="text-amber-600"> ⚠️</span>}
                     </div>
                     {p.sku && <div className="text-xs text-[var(--color-text-muted)]">מק&quot;ט {p.sku}</div>}
+                    {p.description && (
+                      <div className="text-xs text-[var(--color-text-muted)] truncate">{p.description}</div>
+                    )}
                     {packageNoteFor(p) && (
                       <div className="text-xs text-amber-700 truncate">📦 {packageNoteFor(p)}</div>
                     )}
