@@ -39,6 +39,7 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
   );
   const diff = slip.mode === "linked" && slip.original_total != null ? round2(total - Number(slip.original_total)) : null;
   const missingItems = items.filter((it) => it.status === "missing");
+  const shippingCost = slip.shipping_method !== "איסוף עצמי" && slip.shipping_cost != null ? Number(slip.shipping_cost) : 0;
 
   return (
     <div className="print-copy border border-[var(--color-border)] rounded-xl p-5 mb-6 bg-white">
@@ -73,7 +74,7 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
         <thead>
           <tr className="border-b-2 border-black">
             <th className="text-right py-1.5">מוצר</th>
-            <th className="text-center py-1.5">כמות</th>
+            <th className="text-center py-1.5 pl-3">כמות</th>
             <th className="text-left py-1.5">מחיר</th>
           </tr>
         </thead>
@@ -109,7 +110,7 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                     </div>
                   )}
                 </td>
-                <td className="text-center py-1.5">
+                <td className="text-center py-1.5 pl-3">
                   {actualDisplay}
                 </td>
                 <td className="text-left py-1.5">
@@ -156,6 +157,26 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
             <td className="py-2">סה&quot;כ לתשלום</td>
             <td className="text-left py-2">{fmt(total)}</td>
           </tr>
+          {slip.shipping_method && (
+            <tr className="text-[var(--color-text-muted)]">
+              <td className="py-1" colSpan={2}>
+                🚚 שיטת אספקה: {slip.shipping_method}
+                {slip.shipping_method !== "איסוף עצמי" && !shippingCost && " (חינם)"}
+              </td>
+            </tr>
+          )}
+          {shippingCost > 0 && (
+            <>
+              <tr className="text-[var(--color-text-muted)]">
+                <td className="py-1">דמי משלוח</td>
+                <td className="text-left py-1">{fmt(shippingCost)}</td>
+              </tr>
+              <tr className="font-bold text-lg border-t-2 border-black">
+                <td className="py-2">סיכום סופי כולל משלוח</td>
+                <td className="text-left py-2">{fmt(round2(total + shippingCost))}</td>
+              </tr>
+            </>
+          )}
         </tbody>
       </table>
     </div>
