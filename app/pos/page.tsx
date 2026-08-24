@@ -15,7 +15,13 @@ function fmt(n: number): string {
 
 function cartQtyLabel(it: CartItem): string {
   const unitLabel = it.unit === "kg" ? 'ק"ג' : it.unit === "gram" ? "גרם" : "יח'";
-  return `${it.qty} ${unitLabel}`;
+  const weightLabel = `${it.qty} ${unitLabel}`;
+  return it.unit_count != null ? `${weightLabel} · ${unitCountLabel(it.unit_count)}` : weightLabel;
+}
+
+// מוצר "מארז" השקיל לפי משקל אבל הלקוח מזמין ביחידות שלמות (למשל עוף שלם) — מספר יחידות לתצוגה בלבד
+function unitCountLabel(n: number): string {
+  return n === 1 ? "1 יחידה" : `${n} יחידות`;
 }
 
 // עבור מוצרי "מארז" (שקילה בטווח ידוע) — מציג למלקט/ת בדיוק מה שהוצג ללקוח, כדי שידעו איזה מוצר זה
@@ -75,7 +81,8 @@ function clearLocalDraft() {
 function productToCartItem(p: Product): CartItem {
   // מוצר "מארז" לפי משקל מתומחר לק"ג (כמו משקל) — האריזה שוקלת כמות משתנה, ולכן צריך להזין משקל בפועל.
   // מארז במחיר קבוע מתנהג כמו מוצר יחידה — המחיר לא תלוי במשקל בפועל.
-  const isWeighed = p.pricing_type === "weight" || (p.pricing_type === "package" && !p.package_fixed_price);
+  const isPackageByWeight = p.pricing_type === "package" && !p.package_fixed_price;
+  const isWeighed = p.pricing_type === "weight" || isPackageByWeight;
   return {
     product_id: p.id,
     name: p.name,
@@ -90,6 +97,8 @@ function productToCartItem(p: Product): CartItem {
     ordered_weight: null,
     actual_weight_for_billing: null,
     clean_weight: null,
+    // מארז שקיל — הלקוח מזמין ביחידות שלמות (למשל עוף שלם); ברירת המחדל היא יחידה אחת, אפשר לערוך אם שקלו כמה יחד
+    unit_count: isPackageByWeight ? 1 : null,
     catalog_price: p.price,
     status: "picked",
     missing_reason: "",
@@ -111,6 +120,7 @@ function freeCartItem(): CartItem {
     ordered_weight: null,
     actual_weight_for_billing: null,
     clean_weight: null,
+    unit_count: null,
     catalog_price: null,
     status: "picked",
     missing_reason: "",
@@ -132,6 +142,7 @@ function slipToCartItem(it: SlipItem): CartItem {
     ordered_weight: it.ordered_weight,
     actual_weight_for_billing: it.actual_weight_for_billing,
     clean_weight: it.clean_weight,
+    unit_count: it.unit_count,
     catalog_price: null,
     status: it.status,
     missing_reason: it.missing_reason || "",
@@ -793,6 +804,10 @@ export default function PosPage() {
             it.actual_weight_for_billing != null || newItem.actual_weight_for_billing != null
               ? (Number(it.actual_weight_for_billing) || 0) + (Number(newItem.actual_weight_for_billing) || 0)
               : null,
+          unit_count:
+            it.unit_count != null || newItem.unit_count != null
+              ? (Number(it.unit_count) || 0) + (Number(newItem.unit_count) || 0)
+              : null,
         };
       })
     );
@@ -1105,7 +1120,8 @@ export default function PosPage() {
                     ) : (
                       <>
                         <div className="text-xs text-[var(--color-text-muted)]">
-                          {it.qty} {it.unit === "kg" ? 'ק"ג' : it.unit === "gram" ? "גרם" : "יח'"} × {fmt(it.unit_price)}
+                          {it.qty} {it.unit === "kg" ? 'ק"ג' : it.unit === "gram" ? "גרם" : "יח'"}
+                          {it.unit_count != null ? ` · ${unitCountLabel(it.unit_count)}` : ""} × {fmt(it.unit_price)}
                         </div>
                         {it.line_total !== null && (
                           <div className="text-xs text-green-700 font-bold">💰 מחיר סופי קבוע</div>

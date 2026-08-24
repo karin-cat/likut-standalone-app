@@ -31,6 +31,7 @@ export default function ItemEditModal({
     item.line_total !== null && item.line_total !== undefined ? String(item.line_total) : ""
   );
   const [note, setNote] = useState(item.note || "");
+  const [unitCount, setUnitCount] = useState<string>(item.unit_count != null ? String(item.unit_count) : "");
   const [missing, setMissing] = useState(item.status === "missing");
   const [missingReason, setMissingReason] = useState(item.missing_reason || "");
 
@@ -38,6 +39,7 @@ export default function ItemEditModal({
     const fq = parseFloat(freeQty);
     const up = parseFloat(unitPrice);
     const lt = parseFloat(lineTotal);
+    const uc = parseFloat(unitCount);
 
     const updated: CartItem = {
       ...item,
@@ -47,6 +49,7 @@ export default function ItemEditModal({
       unit_price: isFreeItem && !isNaN(up) && up >= 0 ? up : item.unit_price,
       line_total: !isNaN(lt) && lt >= 0 ? lt : null,
       note,
+      unit_count: item.unit_count != null ? (!isNaN(uc) && uc >= 1 ? Math.round(uc) : item.unit_count) : null,
       status: missing ? "missing" : "picked",
       missing_reason: missing ? missingReason.trim() : "",
     };
@@ -154,6 +157,23 @@ export default function ItemEditModal({
             </label>
           ) : (
             <>
+              {item.unit_count != null && (
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm text-[var(--color-text-muted)]">
+                    🐔 כמה יחידות שקלת יחד? (למשל: 2 עופות)
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    step="1"
+                    min="1"
+                    className="field-underline"
+                    value={unitCount}
+                    onChange={(e) => setUnitCount(e.target.value)}
+                  />
+                </label>
+              )}
+
               <label className="flex flex-col gap-1">
                 <span className="text-sm text-[var(--color-text-muted)]">💰 מחיר סופי לשורה (₪) — לא חובה, דורס</span>
                 <input

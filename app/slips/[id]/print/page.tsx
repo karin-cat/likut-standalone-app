@@ -17,6 +17,11 @@ function fmtQty(q: number, unit: string): string {
   return `${text} ${label}`;
 }
 
+// מוצר "מארז" ששקיל אבל הלקוח מזמין ביחידות שלמות (למשל עוף שלם)
+function unitCountLabel(n: number): string {
+  return n === 1 ? "1 יחידה" : `${n} יחידות`;
+}
+
 async function getSlip(id: string): Promise<{ slip: Slip; items: SlipItem[] } | null> {
   const slipRows = await sql`SELECT * FROM slips WHERE id = ${id}`;
   if (!slipRows[0]) return null;
@@ -80,7 +85,12 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
         </thead>
         <tbody>
           {items.map((it, i) => {
-            const actualDisplay = it.status === "missing" ? "—" : fmtQty(Number(it.qty), it.unit);
+            const actualDisplay =
+              it.status === "missing"
+                ? "—"
+                : it.unit_count != null
+                  ? `${fmtQty(Number(it.qty), it.unit)} · ${unitCountLabel(it.unit_count)}`
+                  : fmtQty(Number(it.qty), it.unit);
             return (
               <tr key={it.id} className="border-b border-[var(--color-border)]">
                 <td className="py-1.5 pr-1">
