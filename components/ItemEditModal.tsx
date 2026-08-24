@@ -136,7 +136,12 @@ export default function ItemEditModal({
               </div>
               {item.requires_cleaning && (
                 <div className="mt-3 bg-amber-50 border border-amber-300 text-amber-800 text-sm font-bold rounded-lg px-3 py-2">
-                  🧽 מוצר שעובר ניקוי — חיוב על פי משקל <u>לפני</u> הניקוי
+                  🧽 מוצר שעובר ניקוי
+                  {isWeight && (
+                    <>
+                      {" "}— חיוב על פי משקל <u>לפני</u> הניקוי
+                    </>
+                  )}
                 </div>
               )}
             </>
@@ -172,7 +177,7 @@ export default function ItemEditModal({
             </label>
           ) : (
             <>
-              {item.requires_cleaning && (
+              {item.requires_cleaning && isWeight && (
                 <div className="flex flex-col gap-3 bg-amber-50/50 border border-amber-200 rounded-lg p-3">
                   <label className="flex flex-col gap-1">
                     <span className="text-sm font-bold">⚖️ משקל לפני ניקוי (ק&quot;ג) — לחיוב</span>

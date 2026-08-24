@@ -93,7 +93,7 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                   {it.status !== "missing" && it.line_total != null && (
                     <div className="text-xs text-green-700 font-bold mt-1">💰 מחיר סופי קבוע</div>
                   )}
-                  {it.status !== "missing" && it.requires_cleaning && (
+                  {it.status !== "missing" && it.requires_cleaning && it.unit !== "unit" && (
                     <div className="text-xs text-[var(--color-text-muted)] mt-1 space-y-0.5 border-t border-[var(--color-border)] pt-1">
                       <div>⚖️ מחויב לפי משקל לפני ניקוי</div>
                       {it.actual_weight_for_billing != null && (
@@ -102,6 +102,11 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                       {it.clean_weight != null && (
                         <div>🧽 אחרי ניקוי: {fmtQty(Number(it.clean_weight), "kg")}</div>
                       )}
+                    </div>
+                  )}
+                  {it.status !== "missing" && it.requires_cleaning && it.unit === "unit" && (
+                    <div className="text-xs text-amber-700 mt-1 border-t border-[var(--color-border)] pt-1">
+                      🧽 מוצר שעובר ניקוי
                     </div>
                   )}
                   {it.note && (

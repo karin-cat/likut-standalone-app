@@ -811,14 +811,16 @@ export default function PosPage() {
 
   function handleKeypadPrimaryConfirm(value: number) {
     if (!keypadFlow) return;
+    // ניקוי משפיע על החיוב רק במוצרי משקל (יש משקל לשקול) — במוצרי יחידה זו רק הערה למלקט/ת
+    const isWeightCleaning = keypadFlow.item.requires_cleaning && keypadFlow.item.unit !== "unit";
     const item: CartItem = {
       ...keypadFlow.item,
       qty: keypadFlow.item.unit === "unit" ? Math.round(value) : value,
       // משקל לפני ניקוי — זה המשקל שמשמש בפועל לחיוב (הלקוח משלם לפי המשקל לפני שהמוצר נוקה)
-      ordered_weight: keypadFlow.item.requires_cleaning ? value : null,
-      actual_weight_for_billing: keypadFlow.item.requires_cleaning ? value : null,
+      ordered_weight: isWeightCleaning ? value : null,
+      actual_weight_for_billing: isWeightCleaning ? value : null,
     };
-    if (item.requires_cleaning) {
+    if (isWeightCleaning) {
       setKeypadFlow({ item, stage: "clean", product: keypadFlow.product });
     } else {
       setKeypadFlow(null);
@@ -874,9 +876,10 @@ export default function PosPage() {
       setSaveError("העגלה ריקה");
       return;
     }
-    // מוצרים שדורשים ניקוי אך עדיין לא עודכן להם משקל אחרי ניקוי — לא חוסם, רק מזכיר
+    // מוצרי משקל שדורשים ניקוי ועדיין לא עודכן להם משקל אחרי ניקוי — לא חוסם, רק מזכיר
+    // (במוצרי יחידה הניקוי הוא רק הערה — אין משקל לתעד)
     const missingCleanWeight = cart.filter(
-      (it) => it.requires_cleaning && it.status !== "missing" && it.clean_weight == null
+      (it) => it.requires_cleaning && it.unit !== "unit" && it.status !== "missing" && it.clean_weight == null
     );
     if (missingCleanWeight.length > 0) {
       setCleaningWarning(missingCleanWeight);
@@ -1189,7 +1192,7 @@ export default function PosPage() {
         <WeightKeypad
           title={keypadFlow.item.name}
           label={
-            keypadFlow.item.requires_cleaning
+            keypadFlow.item.requires_cleaning && keypadFlow.item.unit !== "unit"
               ? "משקל לפני ניקוי"
               : keypadFlow.item.unit === "unit"
                 ? "כמות יחידות"
@@ -1199,7 +1202,9 @@ export default function PosPage() {
           initialValue={keypadFlow.item.unit === "unit" ? "1" : ""}
           notice={
             keypadFlow.item.requires_cleaning
-              ? "🧽 מוצר זה מצריך ניקוי — הכנס משקל לפני ניקוי (המשקל הזה ישמש לחיוב)"
+              ? keypadFlow.item.unit !== "unit"
+                ? "🧽 מוצר זה מצריך ניקוי — הכנס משקל לפני ניקוי (המשקל הזה ישמש לחיוב)"
+                : "🧽 מוצר זה מצריך ניקוי — לתשומת לב בזמן הליקוט"
               : packageNoteFor(keypadFlow.product)
                 ? `📦 ${packageNoteFor(keypadFlow.product)}`
                 : null

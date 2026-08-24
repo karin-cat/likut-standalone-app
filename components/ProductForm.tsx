@@ -83,7 +83,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
         sale_price: salePrice,
         is_on_sale: values.isOnSale,
         sold_by_weight: values.pricingType === "weight", // legacy
-        requires_cleaning: values.pricingType === "weight" ? values.requires_cleaning : false,
+        requires_cleaning: values.requires_cleaning,
         unit_weight: values.pricingType === "unit" ? (parseFloat(values.unitWeight) || null) : null,
         package_description: values.pricingType === "package" ? (values.packageDescription || null) : null,
         package_estimated_weight_min: values.pricingType === "package" ? (parseFloat(values.packageWeightMin) || null) : null,
@@ -272,16 +272,19 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
         </label>
       )}
 
-      {values.pricingType === "weight" && (
-        <label className="flex items-center gap-2 mr-6">
-          <input
-            type="checkbox"
-            checked={values.requires_cleaning}
-            onChange={(e) => setValues({ ...values, requires_cleaning: e.target.checked })}
-          />
-          <span>🧽 מצריך ניקוי — החיוב לפי משקל לפני ניקוי</span>
-        </label>
-      )}
+      <label className="flex items-center gap-2 mr-6">
+        <input
+          type="checkbox"
+          checked={values.requires_cleaning}
+          onChange={(e) => setValues({ ...values, requires_cleaning: e.target.checked })}
+        />
+        <span>
+          🧽 מצריך ניקוי
+          {values.pricingType === "weight"
+            ? " — החיוב לפי משקל לפני ניקוי"
+            : " — הערה למלקט/ת בלבד, לא משפיע על המחיר"}
+        </span>
+      </label>
 
       {values.pricingType === "unit" && (
         <label className="flex flex-col gap-1">
