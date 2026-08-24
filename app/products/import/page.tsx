@@ -120,12 +120,14 @@ export default function ImportProductsPage() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [duplicates, setDuplicates] = useState<{ sku: string; name: string }[]>([]);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setError(null);
     setResult(null);
+    setDuplicates([]);
     const reader = new FileReader();
     reader.onload = () => {
       const text = String(reader.result || "");
@@ -215,6 +217,7 @@ export default function ImportProductsPage() {
         return;
       }
       setResult(`יובאו ${data.inserted} מוצרים בהצלחה.`);
+      setDuplicates(Array.isArray(data.duplicates) ? data.duplicates : []);
       setImporting(false);
     } catch {
       setError("בעיית תקשורת");
@@ -295,6 +298,21 @@ export default function ImportProductsPage() {
 
             {error && <div className="text-sm text-[var(--color-danger)]">{error}</div>}
             {result && <div className="text-sm text-green-700">{result}</div>}
+
+            {duplicates.length > 0 && (
+              <div className="text-sm bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 text-amber-900">
+                <div className="font-bold mb-1">
+                  ⚠️ {duplicates.length} מוצר{duplicates.length > 1 ? "ים" : ""} דולג{duplicates.length > 1 ? "ו" : ""} — מק&quot;ט כבר קיים בקטלוג:
+                </div>
+                <ul className="list-disc pr-5">
+                  {duplicates.map((d, i) => (
+                    <li key={i}>
+                      מק&quot;ט {d.sku} — {d.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {!result && (
               <button

@@ -26,11 +26,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "אין שורות לייבוא" }, { status: 400 });
   }
 
+  // מק"טים שכבר קיימים בקטלוג — כדי לא ליצור כפילויות בשקט
+  const existingSkuRows = await sql`SELECT sku FROM products WHERE sku IS NOT NULL`;
+  const existingSkus = new Set(existingSkuRows.map((row) => String(row.sku)));
+  const seenInBatch = new Set<string>();
+  const duplicates: { sku: string; name: string }[] = [];
+
   let inserted = 0;
   for (const r of rows) {
     const name = String(r.name || "").trim();
     if (!name) continue;
     const sku = r.sku ? String(r.sku).trim() : null;
+
+    if (sku && (existingSkus.has(sku) || seenInBatch.has(sku))) {
+      duplicates.push({ sku, name });
+      continue;
+    }
+    if (sku) seenInBatch.add(sku);
+
     const category = r.category ? String(r.category).trim() : null;
     const image_url = r.image_url ? String(r.image_url).trim() : null;
     const pricingType = ["weight", "package"].includes(String(r.pricing_type || "")) ? String(r.pricing_type) : "unit";
@@ -60,5 +73,5 @@ export async function POST(request: Request) {
     inserted++;
   }
 
-  return NextResponse.json({ ok: true, inserted });
+  return NextResponse.json({ ok: true, inserted, duplicates });
 }
