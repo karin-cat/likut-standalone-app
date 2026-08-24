@@ -158,18 +158,13 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
             <td className="text-left py-2">{fmt(total)}</td>
           </tr>
           {slip.shipping_method && (
-            <tr className="text-[var(--color-text-muted)]">
-              <td className="py-1" colSpan={2}>
-                🚚 שיטת אספקה: {slip.shipping_method}
-                {slip.shipping_method !== "איסוף עצמי" && !shippingCost && " (חינם)"}
-              </td>
-            </tr>
-          )}
-          {shippingCost > 0 && (
             <>
               <tr className="text-[var(--color-text-muted)]">
+                <td className="py-1" colSpan={2}>🚚 שיטת אספקה: {slip.shipping_method}</td>
+              </tr>
+              <tr className="text-[var(--color-text-muted)]">
                 <td className="py-1">דמי משלוח</td>
-                <td className="text-left py-1">{fmt(shippingCost)}</td>
+                <td className="text-left py-1">{shippingCost > 0 ? fmt(shippingCost) : "0 (=חינם)"}</td>
               </tr>
               <tr className="font-bold text-lg border-t-2 border-black">
                 <td className="py-2">סיכום סופי כולל משלוח</td>
