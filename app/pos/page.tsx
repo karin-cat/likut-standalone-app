@@ -79,6 +79,7 @@ function productToCartItem(p: Product): CartItem {
     product_id: p.id,
     name: p.name,
     sku: p.sku,
+    description: p.description,
     unit: isWeighed ? "kg" : "unit",
     qty: isWeighed ? 0 : 1,
     unit_price: p.is_on_sale && p.sale_price ? p.sale_price : p.price,
@@ -99,6 +100,7 @@ function freeCartItem(): CartItem {
     product_id: null,
     name: "",
     sku: null,
+    description: null,
     unit: "unit",
     qty: 1,
     unit_price: 0,
@@ -119,6 +121,7 @@ function slipToCartItem(it: SlipItem): CartItem {
     product_id: it.product_id,
     name: it.name,
     sku: null,
+    description: null,
     unit: it.unit,
     qty: it.qty,
     unit_price: it.unit_price,
@@ -596,6 +599,7 @@ export default function PosPage() {
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [cleaningWarning, setCleaningWarning] = useState<CartItem[] | null>(null);
 
   // בעליית הרכיב — אם יש טיוטה שנשמרה מקומית (רענון בטעות באמצע ליקוט), משחזרים אותה ישירות
   useEffect(() => {
@@ -810,10 +814,12 @@ export default function PosPage() {
     const item: CartItem = {
       ...keypadFlow.item,
       qty: keypadFlow.item.unit === "unit" ? Math.round(value) : value,
+      // משקל לפני ניקוי — זה המשקל שמשמש בפועל לחיוב (הלקוח משלם לפי המשקל לפני שהמוצר נוקה)
       ordered_weight: keypadFlow.item.requires_cleaning ? value : null,
+      actual_weight_for_billing: keypadFlow.item.requires_cleaning ? value : null,
     };
     if (item.requires_cleaning) {
-      setKeypadFlow({ item, stage: "clean" });
+      setKeypadFlow({ item, stage: "clean", product: keypadFlow.product });
     } else {
       setKeypadFlow(null);
       addNewItemToCart(item);
@@ -822,13 +828,16 @@ export default function PosPage() {
 
   function handleKeypadCleanConfirm(value: number) {
     if (!keypadFlow) return;
-    const item: CartItem = {
-      ...keypadFlow.item,
-      actual_weight_for_billing: value,
-    };
-    // עבור ניקוי, המשתמש צריך להיכנס ל-ItemEditModal כדי להוסיף את משקל אחרי הניקוי
-    setEditing({ index: null, item });
+    // משקל אחרי ניקוי — לתיעוד בלבד, לא משפיע על המחיר
+    const item: CartItem = { ...keypadFlow.item, clean_weight: value };
     setKeypadFlow(null);
+    addNewItemToCart(item);
+  }
+
+  function handleKeypadCleanSkip() {
+    if (!keypadFlow) return;
+    setKeypadFlow(null);
+    addNewItemToCart(keypadFlow.item);
   }
 
   function handleKeypadMoreOptions() {
@@ -860,11 +869,23 @@ export default function PosPage() {
     setEditing(null);
   }
 
-  async function handleFinishSlip() {
+  function handleFinishSlip() {
     if (cart.length === 0) {
       setSaveError("העגלה ריקה");
       return;
     }
+    // מוצרים שדורשים ניקוי אך עדיין לא עודכן להם משקל אחרי ניקוי — לא חוסם, רק מזכיר
+    const missingCleanWeight = cart.filter(
+      (it) => it.requires_cleaning && it.status !== "missing" && it.clean_weight == null
+    );
+    if (missingCleanWeight.length > 0) {
+      setCleaningWarning(missingCleanWeight);
+      return;
+    }
+    submitFinish();
+  }
+
+  async function submitFinish() {
     if (draftId === null) {
       setSaveError("שגיאה — לא נמצאה תעודה פעילה");
       return;
@@ -1176,7 +1197,13 @@ export default function PosPage() {
           }
           allowGramToggle={keypadFlow.item.unit !== "unit"}
           initialValue={keypadFlow.item.unit === "unit" ? "1" : ""}
-          packageNote={packageNoteFor(keypadFlow.product)}
+          notice={
+            keypadFlow.item.requires_cleaning
+              ? "🧽 מוצר זה מצריך ניקוי — הכנס משקל לפני ניקוי (המשקל הזה ישמש לחיוב)"
+              : packageNoteFor(keypadFlow.product)
+                ? `📦 ${packageNoteFor(keypadFlow.product)}`
+                : null
+          }
           onConfirm={handleKeypadPrimaryConfirm}
           onClose={() => setKeypadFlow(null)}
           onMoreOptions={handleKeypadMoreOptions}
@@ -1185,9 +1212,11 @@ export default function PosPage() {
       {keypadFlow && keypadFlow.stage === "clean" && (
         <WeightKeypad
           title={keypadFlow.item.name}
-          label="משקל אחרי ניקוי — לתיעוד בלבד"
+          label="משקל לאחר ניקוי"
+          notice="🧽 נא להכניס משקל לאחר ניקוי — לתיעוד בלבד, לא חובה כרגע (אך צריך למלא לפני סיום התעודה)"
           allowGramToggle
           onConfirm={handleKeypadCleanConfirm}
+          onSkip={handleKeypadCleanSkip}
           onClose={() => setKeypadFlow(null)}
         />
       )}
@@ -1223,6 +1252,46 @@ export default function PosPage() {
                 className="text-sm text-[var(--color-text-muted)] py-1"
               >
                 ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cleaningWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-xs text-center shadow-xl">
+            <div className="text-3xl mb-2">🧽</div>
+            <div className="font-bold text-lg mb-1">חסר משקל אחרי ניקוי</div>
+            <div className="text-sm text-[var(--color-text-muted)] mb-4">
+              {cleaningWarning.length === 1
+                ? `למוצר "${cleaningWarning[0].name}" לא הוזן משקל אחרי ניקוי.`
+                : `ל-${cleaningWarning.length} מוצרים שדורשים ניקוי לא הוזן משקל אחרי ניקוי:`}
+              {cleaningWarning.length > 1 && (
+                <ul className="mt-2 text-right list-disc pr-5">
+                  {cleaningWarning.map((it, i) => (
+                    <li key={i}>{it.name}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setCleaningWarning(null)}
+                className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold py-3"
+              >
+                ← חזרה לעריכה
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCleaningWarning(null);
+                  submitFinish();
+                }}
+                className="text-sm text-[var(--color-text-muted)] py-1"
+              >
+                המשך בכל זאת
               </button>
             </div>
           </div>

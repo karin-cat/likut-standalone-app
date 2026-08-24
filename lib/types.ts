@@ -92,6 +92,7 @@ export interface CartItem {
   product_id: number | null;
   name: string;
   sku: string | null;
+  description: string | null; // תיאור המוצר מהקטלוג — לתצוגה בלבד באפשרויות נוספות
   unit: SlipItemUnit;
   qty: number;
   unit_price: number;

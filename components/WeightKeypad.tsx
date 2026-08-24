@@ -10,18 +10,20 @@ export default function WeightKeypad({
   onConfirm,
   onClose,
   onMoreOptions,
+  onSkip,
   initialValue,
   allowGramToggle = false,
-  packageNote,
+  notice,
 }: {
   title: string;
   label: string;
   onConfirm: (value: number) => void;
   onClose: () => void;
   onMoreOptions?: () => void;
+  onSkip?: () => void;
   initialValue?: string;
   allowGramToggle?: boolean;
-  packageNote?: string | null;
+  notice?: string | null;
 }) {
   const [digits, setDigits] = useState(initialValue || "");
   const [entryUnit, setEntryUnit] = useState<"kg" | "gram">("kg");
@@ -84,9 +86,9 @@ export default function WeightKeypad({
         <span className="w-8" />
       </div>
 
-      {packageNote && (
+      {notice && (
         <div className="mx-6 mt-4 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 text-sm text-amber-900">
-          📦 {packageNote}
+          {notice}
         </div>
       )}
 
@@ -165,7 +167,7 @@ export default function WeightKeypad({
         )}
       </div>
 
-      <div className="px-4 py-2 border-t border-[var(--color-border)]">
+      <div className="px-4 py-2 border-t border-[var(--color-border)] flex flex-col gap-2">
         <button
           type="button"
           onClick={handleConfirm}
@@ -173,6 +175,11 @@ export default function WeightKeypad({
         >
           ✓ אשר
         </button>
+        {onSkip && (
+          <button type="button" onClick={onSkip} className="text-sm text-[var(--color-text-muted)] font-bold py-1">
+            דלג — לא חובה
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-3">
