@@ -66,7 +66,10 @@ export default async function PriceListPage() {
                       </td>
                       <td className="py-1.5 text-left font-bold whitespace-nowrap">
                         <div>
-                          {fmt(p.price)} <span className="text-xs font-normal text-[var(--color-text-muted)]">/ {p.pricing_type === "weight" ? 'ק"ג' : p.pricing_type === "package" ? "מארז" : "יח'"}</span>
+                          {fmt(p.price)}{" "}
+                          <span className="text-xs font-normal text-[var(--color-text-muted)]">
+                            / {p.pricing_type === "weight" || (p.pricing_type === "package" && !p.package_fixed_price) ? 'ק"ג' : p.pricing_type === "package" ? "מארז" : "יח'"}
+                          </span>
                         </div>
                         {p.sale_price && (
                           <div className="text-xs text-green-700 font-bold">

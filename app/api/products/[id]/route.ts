@@ -33,6 +33,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const packageDescription = pricingType === "package" ? (body.package_description ? String(body.package_description).trim() : null) : null;
   const packageWeightMin = pricingType === "package" ? (body.package_estimated_weight_min ? Number(body.package_estimated_weight_min) : null) : null;
   const packageWeightMax = pricingType === "package" ? (body.package_estimated_weight_max ? Number(body.package_estimated_weight_max) : null) : null;
+  const packageFixedPrice = pricingType === "package" ? !!body.package_fixed_price : false;
   const description = body.description ? String(body.description).trim() : null;
   const notes = body.notes ? String(body.notes).trim() : null;
 
@@ -43,6 +44,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         is_on_sale = ${isOnSale}, sold_by_weight = ${soldByWeight}, requires_cleaning = ${requiresCleaning},
         unit_weight = ${unitWeight}, package_description = ${packageDescription},
         package_estimated_weight_min = ${packageWeightMin}, package_estimated_weight_max = ${packageWeightMax},
+        package_fixed_price = ${packageFixedPrice},
         description = ${description}, notes = ${notes},
         updated_at = now()
     WHERE id = ${id}

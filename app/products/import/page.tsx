@@ -18,6 +18,7 @@ const FIELD_GUESSES: Record<string, string[]> = {
   package_description: ["package description", "תיאור מארז"],
   package_estimated_weight_min: ["min weight", "משקל משוער מינימום"],
   package_estimated_weight_max: ["max weight", "משקל משוער מקסימום"],
+  package_fixed_price: ["package fixed price", "תמחור מארז קבוע", "מחיר קבוע למארז"],
   description: ["description", "תיאור מקוצר", "תיאור"],
   notes: ["notes", "הערות"],
 };
@@ -35,6 +36,7 @@ const FIELD_LABELS: Record<ImportField, string> = {
   package_description: "תיאור מארז",
   package_estimated_weight_min: "משקל משוער מינימום",
   package_estimated_weight_max: "משקל משוער מקסימום",
+  package_fixed_price: "מחיר מארז קבוע (כן/לא) — במקום מחיר לק\"ג",
   description: "תיאור מקוצר",
   notes: "הערות",
 };
@@ -52,6 +54,7 @@ type ImportField =
   | "package_description"
   | "package_estimated_weight_min"
   | "package_estimated_weight_max"
+  | "package_fixed_price"
   | "description"
   | "notes";
 
@@ -68,6 +71,7 @@ const IMPORT_FIELDS: ImportField[] = [
   "package_description",
   "package_estimated_weight_min",
   "package_estimated_weight_max",
+  "package_fixed_price",
   "description",
   "notes",
 ];
@@ -114,6 +118,7 @@ export default function ImportProductsPage() {
     package_description: -1,
     package_estimated_weight_min: -1,
     package_estimated_weight_max: -1,
+    package_fixed_price: -1,
     description: -1,
     notes: -1,
   });
@@ -152,6 +157,7 @@ export default function ImportProductsPage() {
         package_description: guessColumn(hdrs, "package_description"),
         package_estimated_weight_min: guessColumn(hdrs, "package_estimated_weight_min"),
         package_estimated_weight_max: guessColumn(hdrs, "package_estimated_weight_max"),
+        package_fixed_price: guessColumn(hdrs, "package_fixed_price"),
         description: guessColumn(hdrs, "description"),
         notes: guessColumn(hdrs, "notes"),
       });
@@ -187,6 +193,7 @@ export default function ImportProductsPage() {
       const requiresCleaning = mapping.requires_cleaning !== -1 ? parseBool(r[mapping.requires_cleaning] || "") : false;
       const weightMin = mapping.package_estimated_weight_min !== -1 ? parseWeightKg(r[mapping.package_estimated_weight_min] || "") : null;
       const weightMax = mapping.package_estimated_weight_max !== -1 ? parseWeightKg(r[mapping.package_estimated_weight_max] || "") : null;
+      const packageFixedPrice = mapping.package_fixed_price !== -1 ? parseBool(r[mapping.package_fixed_price] || "") : false;
       return {
         name: r[mapping.name] || "",
         sku: mapping.sku !== -1 ? r[mapping.sku] || "" : "",
@@ -200,6 +207,7 @@ export default function ImportProductsPage() {
         package_description: mapping.package_description !== -1 ? r[mapping.package_description] || "" : "",
         package_estimated_weight_min: weightMin || undefined,
         package_estimated_weight_max: weightMax || undefined,
+        package_fixed_price: packageFixedPrice,
         description: mapping.description !== -1 ? r[mapping.description] || "" : "",
         notes: mapping.notes !== -1 ? r[mapping.notes] || "" : "",
       };

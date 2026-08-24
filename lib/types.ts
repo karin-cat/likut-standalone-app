@@ -28,6 +28,7 @@ export interface Product {
   package_description: string | null;
   package_estimated_weight_min: number | null;
   package_estimated_weight_max: number | null;
+  package_fixed_price: boolean; // מארז: true = מחיר קבוע למארז, false = מחיר לק"ג × משקל בפועל
   description: string | null;
   notes: string | null;
   created_at: string;

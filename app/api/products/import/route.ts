@@ -15,6 +15,7 @@ interface ImportRow {
   package_description?: string;
   package_estimated_weight_min?: number;
   package_estimated_weight_max?: number;
+  package_fixed_price?: boolean;
   description?: string;
   notes?: string;
 }
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
     const packageDescription = pricingType === "package" ? (r.package_description ? String(r.package_description).trim() : null) : null;
     const packageWeightMin = pricingType === "package" ? (r.package_estimated_weight_min ? Number(r.package_estimated_weight_min) : null) : null;
     const packageWeightMax = pricingType === "package" ? (r.package_estimated_weight_max ? Number(r.package_estimated_weight_max) : null) : null;
+    const packageFixedPrice = pricingType === "package" ? !!r.package_fixed_price : false;
     const description = r.description ? String(r.description).trim() : null;
     const notes = r.notes ? String(r.notes).trim() : null;
 
@@ -62,12 +64,12 @@ export async function POST(request: Request) {
       INSERT INTO products (
         name, sku, category, image_url, unit, price, pricing_type, sale_price, is_on_sale,
         sold_by_weight, requires_cleaning, unit_weight, package_description,
-        package_estimated_weight_min, package_estimated_weight_max, description, notes
+        package_estimated_weight_min, package_estimated_weight_max, package_fixed_price, description, notes
       )
       VALUES (
         ${name}, ${sku}, ${category}, ${image_url}, 'unit', ${price}, ${pricingType}, ${salePrice}, ${isOnSale},
         FALSE, ${requiresCleaning}, ${unitWeight}, ${packageDescription},
-        ${packageWeightMin}, ${packageWeightMax}, ${description}, ${notes}
+        ${packageWeightMin}, ${packageWeightMax}, ${packageFixedPrice}, ${description}, ${notes}
       )
     `;
     inserted++;

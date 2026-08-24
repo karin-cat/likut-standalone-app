@@ -73,8 +73,9 @@ function clearLocalDraft() {
 }
 
 function productToCartItem(p: Product): CartItem {
-  // מוצר "מארז" מתומחר לק"ג (כמו משקל) — האריזה שוקלת כמות משתנה, ולכן צריך להזין משקל בפועל ולא רק "1 מארז"
-  const isWeighed = p.pricing_type === "weight" || p.pricing_type === "package";
+  // מוצר "מארז" לפי משקל מתומחר לק"ג (כמו משקל) — האריזה שוקלת כמות משתנה, ולכן צריך להזין משקל בפועל.
+  // מארז במחיר קבוע מתנהג כמו מוצר יחידה — המחיר לא תלוי במשקל בפועל.
+  const isWeighed = p.pricing_type === "weight" || (p.pricing_type === "package" && !p.package_fixed_price);
   return {
     product_id: p.id,
     name: p.name,
@@ -1089,7 +1090,9 @@ export default function PosPage() {
                     ) : (
                       <div>{fmt(p.price)}</div>
                     )}
-                    <span className="text-xs font-normal text-[var(--color-text-muted)]">/ {p.pricing_type === "weight" || p.pricing_type === "package" ? 'ק"ג' : "יח'"}</span>
+                    <span className="text-xs font-normal text-[var(--color-text-muted)]">
+                      / {p.pricing_type === "weight" || (p.pricing_type === "package" && !p.package_fixed_price) ? 'ק"ג' : "יח'"}
+                    </span>
                   </div>
                 </button>
               ))

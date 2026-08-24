@@ -49,6 +49,7 @@ export async function POST(request: Request) {
   const packageDescription = pricingType === "package" ? (body.package_description ? String(body.package_description).trim() : null) : null;
   const packageWeightMin = pricingType === "package" ? (body.package_estimated_weight_min ? Number(body.package_estimated_weight_min) : null) : null;
   const packageWeightMax = pricingType === "package" ? (body.package_estimated_weight_max ? Number(body.package_estimated_weight_max) : null) : null;
+  const packageFixedPrice = pricingType === "package" ? !!body.package_fixed_price : false;
   const description = body.description ? String(body.description).trim() : null;
   const notes = body.notes ? String(body.notes).trim() : null;
 
@@ -56,12 +57,12 @@ export async function POST(request: Request) {
     INSERT INTO products (
       name, sku, category, category_id, image_url, unit, price, pricing_type, sale_price, is_on_sale,
       sold_by_weight, requires_cleaning, unit_weight, package_description,
-      package_estimated_weight_min, package_estimated_weight_max, description, notes
+      package_estimated_weight_min, package_estimated_weight_max, package_fixed_price, description, notes
     )
     VALUES (
       ${name}, ${sku}, ${category}, ${categoryId}, ${image_url}, ${unit}, ${price}, ${pricingType}, ${salePrice}, ${isOnSale},
       ${soldByWeight}, ${requiresCleaning}, ${unitWeight}, ${packageDescription},
-      ${packageWeightMin}, ${packageWeightMax}, ${description}, ${notes}
+      ${packageWeightMin}, ${packageWeightMax}, ${packageFixedPrice}, ${description}, ${notes}
     )
     RETURNING *
   `;

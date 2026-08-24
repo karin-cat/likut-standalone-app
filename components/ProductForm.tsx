@@ -19,6 +19,7 @@ export interface ProductFormValues {
   packageDescription: string;
   packageWeightMin: string;
   packageWeightMax: string;
+  packageFixedPrice: boolean;
   description: string;
   notes: string;
 }
@@ -39,6 +40,7 @@ function toFormValues(p?: Product): ProductFormValues {
     packageDescription: p?.package_description || "",
     packageWeightMin: p?.package_estimated_weight_min != null ? String(p.package_estimated_weight_min) : "",
     packageWeightMax: p?.package_estimated_weight_max != null ? String(p.package_estimated_weight_max) : "",
+    packageFixedPrice: p?.package_fixed_price || false,
     description: p?.description || "",
     notes: p?.notes || "",
   };
@@ -88,6 +90,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
         package_description: values.pricingType === "package" ? (values.packageDescription || null) : null,
         package_estimated_weight_min: values.pricingType === "package" ? (parseFloat(values.packageWeightMin) || null) : null,
         package_estimated_weight_max: values.pricingType === "package" ? (parseFloat(values.packageWeightMax) || null) : null,
+        package_fixed_price: values.pricingType === "package" ? values.packageFixedPrice : false,
         description: values.description || null,
         notes: values.notes || null,
       };
@@ -118,6 +121,15 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
     router.push("/products");
     router.refresh();
   }
+
+  const priceUnitLabel =
+    values.pricingType === "weight"
+      ? 'לק"ג'
+      : values.pricingType === "package"
+        ? values.packageFixedPrice
+          ? "למארז"
+          : 'לק"ג'
+        : "ליחידה";
 
   return (
     <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-4 pb-28">
@@ -231,9 +243,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm text-[var(--color-text-muted)]">
-          מחיר רגיל {values.pricingType === "weight" ? 'לק"ג' : values.pricingType === "package" ? 'לק"ג' : "ליחידה"} (₪)
-        </span>
+        <span className="text-sm text-[var(--color-text-muted)]">מחיר רגיל {priceUnitLabel} (₪)</span>
         <input
           type="number"
           inputMode="decimal"
@@ -247,9 +257,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm text-[var(--color-text-muted)]">
-          מחיר מבצע {values.pricingType === "weight" ? 'לק"ג' : values.pricingType === "package" ? 'לק"ג' : "ליחידה"} (₪) — אופציונלי
-        </span>
+        <span className="text-sm text-[var(--color-text-muted)]">מחיר מבצע {priceUnitLabel} (₪) — אופציונלי</span>
         <input
           type="number"
           inputMode="decimal"
@@ -288,7 +296,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
 
       {values.pricingType === "unit" && (
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-[var(--color-text-muted)]">משקל ליחידה (ק"ג) — אופציונלי, לתצוגה בלבד</span>
+          <span className="text-sm text-[var(--color-text-muted)]">משקל ליחידה (ק&quot;ג) — אופציונלי, לתצוגה בלבד</span>
           <input
             type="number"
             inputMode="decimal"
@@ -303,6 +311,39 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
 
       {values.pricingType === "package" && (
         <>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm text-[var(--color-text-muted)]">תמחור המארז</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setValues({ ...values, packageFixedPrice: false })}
+                className={`flex-1 rounded-lg py-2 px-3 font-bold text-sm transition ${
+                  !values.packageFixedPrice
+                    ? "bg-[var(--color-brand)] text-white"
+                    : "border border-[var(--color-border)] text-[var(--color-text-muted)]"
+                }`}
+              >
+                לפי משקל (מחיר לק&quot;ג)
+              </button>
+              <button
+                type="button"
+                onClick={() => setValues({ ...values, packageFixedPrice: true })}
+                className={`flex-1 rounded-lg py-2 px-3 font-bold text-sm transition ${
+                  values.packageFixedPrice
+                    ? "bg-[var(--color-brand)] text-white"
+                    : "border border-[var(--color-border)] text-[var(--color-text-muted)]"
+                }`}
+              >
+                מחיר קבוע למארז
+              </button>
+            </div>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {values.packageFixedPrice
+                ? "הלקוח משלם מחיר קבוע למארז, בלי קשר למשקל בפועל"
+                : "המארז נשקל בפועל, והמחיר מחושב לפי מחיר לק\"ג × המשקל שנשקל"}
+            </span>
+          </label>
+
           <label className="flex flex-col gap-1">
             <span className="text-sm text-[var(--color-text-muted)]">תיאור המארז — מה מכיל המארז</span>
             <input
@@ -314,7 +355,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">משקל משוער מינימום (ק"ג) — אופציונלי</span>
+            <span className="text-sm text-[var(--color-text-muted)]">משקל משוער מינימום (ק&quot;ג) — אופציונלי</span>
             <input
               type="number"
               inputMode="decimal"
@@ -326,7 +367,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm text-[var(--color-text-muted)]">משקל משוער מקסימום (ק"ג) — אופציונלי</span>
+            <span className="text-sm text-[var(--color-text-muted)]">משקל משוער מקסימום (ק&quot;ג) — אופציונלי</span>
             <input
               type="number"
               inputMode="decimal"
