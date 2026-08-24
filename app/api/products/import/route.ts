@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const price = Number(r.price) || 0;
     const salePrice = r.sale_price ? Number(r.sale_price) : null;
     const isOnSale = !!r.is_on_sale;
-    const requiresCleaning = pricingType === "weight" ? !!r.requires_cleaning : false;
+    const requiresCleaning = !!r.requires_cleaning;
     const unitWeight = pricingType === "unit" ? (r.unit_weight ? Number(r.unit_weight) : null) : null;
     const packageDescription = pricingType === "package" ? (r.package_description ? String(r.package_description).trim() : null) : null;
     const packageWeightMin = pricingType === "package" ? (r.package_estimated_weight_min ? Number(r.package_estimated_weight_min) : null) : null;

@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   const salePrice = body.sale_price ? Number(body.sale_price) : null;
   const isOnSale = !!body.is_on_sale;
   const soldByWeight = !!body.sold_by_weight;
-  const requiresCleaning = pricingType === "weight" ? !!body.requires_cleaning : false;
+  const requiresCleaning = !!body.requires_cleaning;
   const unitWeight = pricingType === "unit" ? (body.unit_weight ? Number(body.unit_weight) : null) : null;
   const packageDescription = pricingType === "package" ? (body.package_description ? String(body.package_description).trim() : null) : null;
   const packageWeightMin = pricingType === "package" ? (body.package_estimated_weight_min ? Number(body.package_estimated_weight_min) : null) : null;
