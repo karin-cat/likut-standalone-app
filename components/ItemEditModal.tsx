@@ -31,14 +31,6 @@ export default function ItemEditModal({
     item.line_total !== null && item.line_total !== undefined ? String(item.line_total) : ""
   );
   const [note, setNote] = useState(item.note || "");
-  const [actualWeightForBilling, setActualWeightForBilling] = useState<string>(
-    item.actual_weight_for_billing !== null && item.actual_weight_for_billing !== undefined
-      ? String(item.actual_weight_for_billing)
-      : ""
-  );
-  const [cleanWeight, setCleanWeight] = useState<string>(
-    item.clean_weight !== null && item.clean_weight !== undefined ? String(item.clean_weight) : ""
-  );
   const [missing, setMissing] = useState(item.status === "missing");
   const [missingReason, setMissingReason] = useState(item.missing_reason || "");
 
@@ -46,8 +38,6 @@ export default function ItemEditModal({
     const fq = parseFloat(freeQty);
     const up = parseFloat(unitPrice);
     const lt = parseFloat(lineTotal);
-    const awb = parseFloat(actualWeightForBilling);
-    const cw = parseFloat(cleanWeight);
 
     const updated: CartItem = {
       ...item,
@@ -57,9 +47,6 @@ export default function ItemEditModal({
       unit_price: isFreeItem && !isNaN(up) && up >= 0 ? up : item.unit_price,
       line_total: !isNaN(lt) && lt >= 0 ? lt : null,
       note,
-      ordered_weight: item.requires_cleaning ? (!isNaN(awb) && awb >= 0 ? awb : item.ordered_weight) : item.ordered_weight,
-      actual_weight_for_billing: item.requires_cleaning ? (!isNaN(awb) && awb >= 0 ? awb : null) : item.actual_weight_for_billing,
-      clean_weight: item.requires_cleaning ? (!isNaN(cw) && cw >= 0 ? cw : null) : item.clean_weight,
       status: missing ? "missing" : "picked",
       missing_reason: missing ? missingReason.trim() : "",
     };
@@ -134,21 +121,11 @@ export default function ItemEditModal({
               <div className="font-bold text-lg mt-2">
                 {fmt(item.unit_price)} <span className="text-sm font-normal">{isWeight ? '/ ק"ג' : "/ יח'"}</span>
               </div>
-              {item.requires_cleaning && (
-                <div className="mt-3 bg-amber-50 border border-amber-300 text-amber-800 text-sm font-bold rounded-lg px-3 py-2">
-                  🧽 מוצר שעובר ניקוי
-                  {isWeight && (
-                    <>
-                      {" "}— חיוב על פי משקל <u>לפני</u> הניקוי
-                    </>
-                  )}
-                </div>
-              )}
             </>
           )}
         </div>
 
-        {/* ── אזור פעיל — סימון חוסר / משקלים לניקוי / הערה ── */}
+        {/* ── אזור פעיל — סימון חוסר / הערה ── */}
         <div className="p-5 flex flex-col gap-4">
           <button
             type="button"
@@ -177,36 +154,6 @@ export default function ItemEditModal({
             </label>
           ) : (
             <>
-              {item.requires_cleaning && isWeight && (
-                <div className="flex flex-col gap-3 bg-amber-50/50 border border-amber-200 rounded-lg p-3">
-                  <label className="flex flex-col gap-1">
-                    <span className="text-sm font-bold">⚖️ משקל לפני ניקוי (ק&quot;ג) — לחיוב</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      min="0"
-                      className="field-underline"
-                      value={actualWeightForBilling}
-                      onChange={(e) => setActualWeightForBilling(e.target.value)}
-                      placeholder="למשל: 5"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-sm text-[var(--color-text-muted)]">🧽 משקל לאחר ניקוי (ק&quot;ג) — לא חובה</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      min="0"
-                      className="field-underline"
-                      value={cleanWeight}
-                      onChange={(e) => setCleanWeight(e.target.value)}
-                    />
-                  </label>
-                </div>
-              )}
-
               <label className="flex flex-col gap-1">
                 <span className="text-sm text-[var(--color-text-muted)]">💰 מחיר סופי לשורה (₪) — לא חובה, דורס</span>
                 <input

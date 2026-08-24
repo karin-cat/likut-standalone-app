@@ -14,7 +14,6 @@ export interface ProductFormValues {
   price: string;
   salePrice: string;
   isOnSale: boolean;
-  requires_cleaning: boolean;
   unitWeight: string;
   packageDescription: string;
   packageWeightMin: string;
@@ -35,7 +34,6 @@ function toFormValues(p?: Product): ProductFormValues {
     price: p != null ? String(p.price) : "",
     salePrice: p?.sale_price != null ? String(p.sale_price) : "",
     isOnSale: p?.is_on_sale || false,
-    requires_cleaning: p?.requires_cleaning || false,
     unitWeight: p?.unit_weight != null ? String(p.unit_weight) : "",
     packageDescription: p?.package_description || "",
     packageWeightMin: p?.package_estimated_weight_min != null ? String(p.package_estimated_weight_min) : "",
@@ -85,7 +83,7 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
         sale_price: salePrice,
         is_on_sale: values.isOnSale,
         sold_by_weight: values.pricingType === "weight", // legacy
-        requires_cleaning: values.requires_cleaning,
+        requires_cleaning: false,
         unit_weight: values.pricingType === "unit" ? (parseFloat(values.unitWeight) || null) : null,
         package_description: values.pricingType === "package" ? (values.packageDescription || null) : null,
         package_estimated_weight_min: values.pricingType === "package" ? (parseFloat(values.packageWeightMin) || null) : null,
@@ -279,20 +277,6 @@ export default function ProductForm({ product, id }: { product?: Product; id?: n
           <span>🏷️ מוצר נמצא כרגע במבצע</span>
         </label>
       )}
-
-      <label className="flex items-center gap-2 mr-6">
-        <input
-          type="checkbox"
-          checked={values.requires_cleaning}
-          onChange={(e) => setValues({ ...values, requires_cleaning: e.target.checked })}
-        />
-        <span>
-          🧽 מצריך ניקוי
-          {values.pricingType === "weight"
-            ? " — החיוב לפי משקל לפני ניקוי"
-            : " — הערה למלקט/ת בלבד, לא משפיע על המחיר"}
-        </span>
-      </label>
 
       {values.pricingType === "unit" && (
         <label className="flex flex-col gap-1">

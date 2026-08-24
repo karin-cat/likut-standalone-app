@@ -80,7 +80,7 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
         </thead>
         <tbody>
           {items.map((it, i) => {
-            const actualDisplay = it.status === "missing" ? "—" : (it.requires_cleaning && it.actual_weight_for_billing ? fmtQty(Number(it.actual_weight_for_billing), "kg") : fmtQty(Number(it.qty), it.unit));
+            const actualDisplay = it.status === "missing" ? "—" : fmtQty(Number(it.qty), it.unit);
             return (
               <tr key={it.id} className="border-b border-[var(--color-border)]">
                 <td className="py-1.5 pr-1">
@@ -92,22 +92,6 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                   )}
                   {it.status !== "missing" && it.line_total != null && (
                     <div className="text-xs text-green-700 font-bold mt-1">💰 מחיר סופי קבוע</div>
-                  )}
-                  {it.status !== "missing" && it.requires_cleaning && it.unit !== "unit" && (
-                    <div className="text-xs text-[var(--color-text-muted)] mt-1 space-y-0.5 border-t border-[var(--color-border)] pt-1">
-                      <div>⚖️ מחויב לפי משקל לפני ניקוי</div>
-                      {it.actual_weight_for_billing != null && (
-                        <div>📦 לחיוב: {fmtQty(Number(it.actual_weight_for_billing), "kg")}</div>
-                      )}
-                      {it.clean_weight != null && (
-                        <div>🧽 אחרי ניקוי: {fmtQty(Number(it.clean_weight), "kg")}</div>
-                      )}
-                    </div>
-                  )}
-                  {it.status !== "missing" && it.requires_cleaning && it.unit === "unit" && (
-                    <div className="text-xs text-amber-700 mt-1 border-t border-[var(--color-border)] pt-1">
-                      🧽 מוצר שעובר ניקוי
-                    </div>
                   )}
                   {it.note && (
                     <div className="text-xs text-amber-700 mt-1 border-t border-[var(--color-border)] pt-1">

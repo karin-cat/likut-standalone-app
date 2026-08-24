@@ -14,7 +14,6 @@ const FIELD_GUESSES: Record<string, string[]> = {
   price: ["price", "regular price", "מחיר", "מחיר רגיל"],
   sale_price: ["sale price", "מחיר מבצע"],
   is_on_sale: ["on sale", "במבצע"],
-  requires_cleaning: ["requires cleaning", "מצריך ניקוי"],
   package_description: ["package description", "תיאור מארז"],
   package_estimated_weight_min: ["min weight", "משקל משוער מינימום"],
   package_estimated_weight_max: ["max weight", "משקל משוער מקסימום"],
@@ -32,7 +31,6 @@ const FIELD_LABELS: Record<ImportField, string> = {
   price: "מחיר רגיל",
   sale_price: "מחיר מבצע",
   is_on_sale: "במבצע (כן/לא)",
-  requires_cleaning: "מצריך ניקוי (כן/לא)",
   package_description: "תיאור מארז",
   package_estimated_weight_min: "משקל משוער מינימום",
   package_estimated_weight_max: "משקל משוער מקסימום",
@@ -50,7 +48,6 @@ type ImportField =
   | "price"
   | "sale_price"
   | "is_on_sale"
-  | "requires_cleaning"
   | "package_description"
   | "package_estimated_weight_min"
   | "package_estimated_weight_max"
@@ -67,7 +64,6 @@ const IMPORT_FIELDS: ImportField[] = [
   "price",
   "sale_price",
   "is_on_sale",
-  "requires_cleaning",
   "package_description",
   "package_estimated_weight_min",
   "package_estimated_weight_max",
@@ -114,7 +110,6 @@ export default function ImportProductsPage() {
     price: -1,
     sale_price: -1,
     is_on_sale: -1,
-    requires_cleaning: -1,
     package_description: -1,
     package_estimated_weight_min: -1,
     package_estimated_weight_max: -1,
@@ -153,7 +148,6 @@ export default function ImportProductsPage() {
         price: guessColumn(hdrs, "price"),
         sale_price: guessColumn(hdrs, "sale_price"),
         is_on_sale: guessColumn(hdrs, "is_on_sale"),
-        requires_cleaning: guessColumn(hdrs, "requires_cleaning"),
         package_description: guessColumn(hdrs, "package_description"),
         package_estimated_weight_min: guessColumn(hdrs, "package_estimated_weight_min"),
         package_estimated_weight_max: guessColumn(hdrs, "package_estimated_weight_max"),
@@ -190,7 +184,6 @@ export default function ImportProductsPage() {
       const salePrice = salePriceRaw ? parseFloat(salePriceRaw.replace(/[^\d.]/g, "")) || 0 : 0;
       const pricingTypeRaw = mapping.pricing_type !== -1 ? (r[mapping.pricing_type] || "").trim().toLowerCase() : "";
       const isOnSale = mapping.is_on_sale !== -1 ? parseBool(r[mapping.is_on_sale] || "") : !!salePrice;
-      const requiresCleaning = mapping.requires_cleaning !== -1 ? parseBool(r[mapping.requires_cleaning] || "") : false;
       const weightMin = mapping.package_estimated_weight_min !== -1 ? parseWeightKg(r[mapping.package_estimated_weight_min] || "") : null;
       const weightMax = mapping.package_estimated_weight_max !== -1 ? parseWeightKg(r[mapping.package_estimated_weight_max] || "") : null;
       const packageFixedPrice = mapping.package_fixed_price !== -1 ? parseBool(r[mapping.package_fixed_price] || "") : false;
@@ -203,7 +196,6 @@ export default function ImportProductsPage() {
         price: mapping.price !== -1 ? parseFloat((r[mapping.price] || "0").replace(/[^\d.]/g, "")) || 0 : 0,
         sale_price: salePrice || undefined,
         is_on_sale: isOnSale,
-        requires_cleaning: requiresCleaning,
         package_description: mapping.package_description !== -1 ? r[mapping.package_description] || "" : "",
         package_estimated_weight_min: weightMin || undefined,
         package_estimated_weight_max: weightMax || undefined,

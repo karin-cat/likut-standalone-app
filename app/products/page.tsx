@@ -79,12 +79,9 @@ export default function ProductsPage() {
                 />
               )}
               <div className="min-w-0 flex-1">
-                <div className="font-semibold truncate">
-                  {p.name}
-                  {p.requires_cleaning && <span className="text-amber-600"> ⚠️</span>}
-                </div>
+                <div className="font-semibold truncate">{p.name}</div>
                 <div className="text-xs text-[var(--color-text-muted)] flex gap-1">
-                  {p.sku && <span>מק"ט {p.sku}</span>}
+                  {p.sku && <span>מק&quot;ט {p.sku}</span>}
                   {p.sku && p.category && <span>·</span>}
                   {p.category && <span>{p.category}</span>}
                   {!p.sku && !p.category && <span>ללא קטגוריה</span>}

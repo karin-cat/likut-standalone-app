@@ -10,7 +10,6 @@ export default function WeightKeypad({
   onConfirm,
   onClose,
   onMoreOptions,
-  onSkip,
   initialValue,
   allowGramToggle = false,
   notice,
@@ -20,7 +19,6 @@ export default function WeightKeypad({
   onConfirm: (value: number) => void;
   onClose: () => void;
   onMoreOptions?: () => void;
-  onSkip?: () => void;
   initialValue?: string;
   allowGramToggle?: boolean;
   notice?: string | null;
@@ -175,11 +173,6 @@ export default function WeightKeypad({
         >
           ✓ אשר
         </button>
-        {onSkip && (
-          <button type="button" onClick={onSkip} className="text-sm text-[var(--color-text-muted)] font-bold py-1">
-            דלג — לא חובה
-          </button>
-        )}
       </div>
 
       <div className="grid grid-cols-3">
