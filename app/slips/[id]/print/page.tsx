@@ -50,9 +50,9 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
       </div>
 
       <div className="text-sm mb-4 border-b border-[var(--color-border)] pb-3 flex flex-col gap-0.5">
-        {slip.order_number && <div>הזמנה #{slip.order_number}</div>}
+        {slip.order_number && <div>מספר הזמנה: {slip.order_number}</div>}
         {slip.picker_name && <div>🧑‍💼 מלקט/ת: {slip.picker_name}</div>}
-        <div>👤 {slip.customer_name || "לקוח כללי"}</div>
+        <div>👤 לקוח/ה: {slip.customer_name || "כללי"}</div>
         {slip.customer_phone && <div>📞 {slip.customer_phone}</div>}
         {slip.customer_email && <div>📧 {slip.customer_email}</div>}
         {slip.customer_address_street && <div>🏘️ {slip.customer_address_street}</div>}
@@ -73,14 +73,12 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
         <thead>
           <tr className="border-b-2 border-black">
             <th className="text-right py-1.5">מוצר</th>
-            <th className="text-center py-1.5">הוזמן</th>
-            <th className="text-center py-1.5">בפועל</th>
+            <th className="text-center py-1.5">כמות</th>
             <th className="text-left py-1.5">מחיר</th>
           </tr>
         </thead>
         <tbody>
           {items.map((it, i) => {
-            const orderedDisplay = it.ordered_weight != null ? fmtQty(Number(it.ordered_weight), it.unit) : "—";
             const actualDisplay = it.status === "missing" ? "—" : (it.requires_cleaning && it.actual_weight_for_billing ? fmtQty(Number(it.actual_weight_for_billing), "kg") : fmtQty(Number(it.qty), it.unit));
             return (
               <tr key={it.id} className="border-b border-[var(--color-border)]">
@@ -110,9 +108,6 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                       📝 {it.note}
                     </div>
                   )}
-                </td>
-                <td className="text-center py-1.5">
-                  {orderedDisplay}
                 </td>
                 <td className="text-center py-1.5">
                   {actualDisplay}
