@@ -623,6 +623,8 @@ function PosPageInner() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [editing, setEditing] = useState<{ index: number | null; item: CartItem } | null>(null);
   const [keypadFlow, setKeypadFlow] = useState<{ item: CartItem; product?: Product } | null>(null);
+  // אם נכנסנו ל"אפשרויות נוספות" מתוך המקלדת — שומר את המצב כדי לחזור אליה בביטול (ולא לקטלוג)
+  const [pendingKeypadReturn, setPendingKeypadReturn] = useState<{ item: CartItem; product?: Product } | null>(null);
   const [duplicatePrompt, setDuplicatePrompt] = useState<{ newItem: CartItem; existingIndex: number } | null>(null);
 
   const [saving, setSaving] = useState(false);
@@ -748,6 +750,7 @@ function PosPageInner() {
     setTab("catalog");
     setEditing(null);
     setKeypadFlow(null);
+    setPendingKeypadReturn(null);
     setSaveError(null);
   }
 
@@ -862,8 +865,18 @@ function PosPageInner() {
 
   function handleKeypadMoreOptions() {
     if (!keypadFlow) return;
+    setPendingKeypadReturn(keypadFlow);
     setEditing({ index: null, item: keypadFlow.item });
     setKeypadFlow(null);
+  }
+
+  // ביטול מתוך "אפשרויות נוספות" — אם הגענו לשם מתוך המקלדת, חוזרים אליה (ולא לקטלוג)
+  function handleCancelEdit() {
+    setEditing(null);
+    if (pendingKeypadReturn) {
+      setKeypadFlow(pendingKeypadReturn);
+      setPendingKeypadReturn(null);
+    }
   }
 
   function openEditModal(index: number) {
@@ -873,6 +886,7 @@ function PosPageInner() {
   function handleSaveItem(updated: CartItem) {
     const isNew = editing?.index === null || editing?.index === undefined;
     setEditing(null);
+    setPendingKeypadReturn(null);
     if (isNew) {
       addNewItemToCart(updated);
     } else {
@@ -1189,7 +1203,7 @@ function PosPageInner() {
         <ItemEditModal
           item={editing.item}
           isNew={editing.index === null}
-          onCancel={() => setEditing(null)}
+          onCancel={handleCancelEdit}
           onSave={handleSaveItem}
           onDelete={editing.index !== null ? handleDeleteItem : undefined}
         />

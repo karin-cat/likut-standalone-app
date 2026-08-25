@@ -171,7 +171,7 @@ export default function WeightKeypad({
           </button>
         </div>
         {onMoreOptions && (
-          <button type="button" onClick={onMoreOptions} className="mt-2 text-sm text-[var(--color-brand-dark)] font-bold self-start">
+          <button type="button" onClick={onMoreOptions} className="my-5 text-sm text-[var(--color-brand-dark)] font-bold self-start">
             ⚙️ אפשרויות נוספות (הערה / מחיר ידני)
           </button>
         )}
