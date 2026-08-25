@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import ItemEditModal from "@/components/ItemEditModal";
 import WeightKeypad from "@/components/WeightKeypad";
@@ -183,7 +183,7 @@ function MenuScreen({ onNew, onResume }: { onNew: () => void; onResume: () => vo
         className="w-full max-w-xs rounded-2xl bg-white shadow-sm border border-[var(--color-border)] py-6 text-center font-bold text-lg active:bg-[var(--color-bg-soft)]"
       >
         📋 המשך ליקוט קיים
-        <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">תעודות שלא הושלמו</div>
+        <div className="text-xs font-normal text-[var(--color-text-muted)] mt-1">טיוטות פתוחות, וגם תעודות שכבר הופקו</div>
       </button>
     </div>
   );
@@ -566,21 +566,28 @@ function ResumeListScreen({
               className="bg-white rounded-xl border border-[var(--color-border)] p-4 flex items-center justify-between gap-3"
             >
               <button type="button" onClick={() => onResume(d.id)} className="flex-1 text-right min-w-0">
-                <div className="font-bold truncate">{d.customer_name || "👥 לקוח כללי"}</div>
+                <div className="font-bold truncate">
+                  {d.customer_name || "👥 לקוח כללי"}
+                  {d.status === "completed" && (
+                    <span className="mr-2 text-xs font-normal text-green-700">✅ הופקה — לחיצה לעריכה</span>
+                  )}
+                </div>
                 <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
                   {d.order_number ? `הזמנה #${d.order_number} · ` : ""}
                   {d.item_count} פריטים · {new Date(d.created_at).toLocaleString("he-IL")}
                 </div>
                 <div className="font-bold text-[var(--color-brand-dark)] mt-1">{fmt(Number(d.total))}</div>
               </button>
-              <button
-                type="button"
-                onClick={() => onDelete(d.id)}
-                className="text-[var(--color-danger)] text-xl px-2 shrink-0"
-                aria-label="מחיקת תעודה"
-              >
-                🗑
-              </button>
+              {d.status === "draft" && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(d.id)}
+                  className="text-[var(--color-danger)] text-xl px-2 shrink-0"
+                  aria-label="מחיקת תעודה"
+                >
+                  🗑
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -590,7 +597,16 @@ function ResumeListScreen({
 }
 
 export default function PosPage() {
+  return (
+    <Suspense fallback={null}>
+      <PosPageInner />
+    </Suspense>
+  );
+}
+
+function PosPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>("menu");
   const [meta, setMeta] = useState<SlipDraftMeta>(emptySlipDraftMeta());
   const [draftId, setDraftId] = useState<number | null>(null);
@@ -622,6 +638,16 @@ export default function PosPage() {
       setCart(d.cart);
       setPhase("working");
     }
+  }, []);
+
+  // כניסה ישירה לעריכת תעודה מסוימת (מ"היסטוריית תעודות") דרך /pos?resume=<id>
+  // — רק אם אין טיוטה מקומית שמורה, כדי לא לדרוס עבודה שכבר בעיצומה
+  useEffect(() => {
+    const resumeId = searchParams.get("resume");
+    if (!resumeId || loadLocalDraft()) return;
+    const id = Number(resumeId);
+    if (Number.isFinite(id)) handleResumeDraft(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // שמירה אוטומטית של הטיוטה הפעילה — מגנה מפני רענון בטעות

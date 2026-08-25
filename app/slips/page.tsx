@@ -22,12 +22,11 @@ export default async function SlipsHistoryPage() {
           <div className="p-6 text-center text-[var(--color-text-muted)]">אין תעודות עדיין.</div>
         ) : (
           slips.map((s) => (
-            <Link
+            <div
               key={s.id}
-              href={`/slips/${s.id}/print`}
-              className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-white"
+              className="flex items-center justify-between gap-2 px-4 py-3 border-b border-[var(--color-border)] bg-white"
             >
-              <div className="min-w-0">
+              <Link href={`/slips/${s.id}/print`} className="min-w-0 flex-1">
                 <div className="font-semibold">
                   #{s.id} · {s.mode === "linked" ? `📋 הזמנה ${s.order_number || ""}` : "🧺 ליקוט עצמאי"}
                 </div>
@@ -35,9 +34,15 @@ export default async function SlipsHistoryPage() {
                   {new Date(s.created_at).toLocaleString("he-IL")}
                   {s.customer_name ? ` · ${s.customer_name}` : ""}
                 </div>
-              </div>
+              </Link>
               <div className="font-bold shrink-0">{fmt(Number(s.total))}</div>
-            </Link>
+              <Link
+                href={`/pos?resume=${s.id}`}
+                className="shrink-0 text-sm font-bold text-[var(--color-brand-dark)] px-2 py-1"
+              >
+                ✏️ עריכה
+              </Link>
+            </div>
           ))
         )}
       </div>
