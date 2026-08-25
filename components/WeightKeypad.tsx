@@ -164,7 +164,7 @@ export default function WeightKeypad({
           <button
             type="button"
             onClick={clearDigits}
-            className="text-6xl font-bold tabular-nums text-left"
+            className="flex-1 min-w-0 text-5xl font-bold tabular-nums text-left whitespace-nowrap"
             aria-label="ניקוי כדי להקליד ערך חדש"
           >
             {digits || "0"}
