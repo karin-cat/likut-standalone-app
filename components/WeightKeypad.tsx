@@ -100,7 +100,7 @@ export default function WeightKeypad({
         </div>
       )}
 
-      <div className="px-6 pb-3 pt-3">
+      <div className="px-4 pb-3 pt-3">
         <div className="flex items-center justify-between mb-1">
           <div className="text-sm text-[var(--color-text-muted)]">
             {label} {allowGramToggle ? `(${entryUnit === "kg" ? 'ק"ג' : "גרם"})` : ""}
