@@ -100,6 +100,16 @@ function Copy({ title, slip, items }: { title: string; slip: Slip; items: SlipIt
                       ✕ לא סופק{it.missing_reason ? ` — ${it.missing_reason}` : ""}
                     </div>
                   )}
+                  {it.status !== "missing" && (
+                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                      {fmtQty(Number(it.qty), it.unit)} × {fmt(Number(it.unit_price))}
+                    </div>
+                  )}
+                  {it.status !== "missing" && it.catalog_price != null && Number(it.catalog_price) > Number(it.unit_price) && (
+                    <div className="text-xs text-[var(--color-danger)] mt-0.5">
+                      🏷️ מחיר מבצע — במקום <span className="line-through">{fmt(Number(it.catalog_price))}</span>
+                    </div>
+                  )}
                   {it.status !== "missing" && it.line_total != null && (
                     <div className="text-xs text-green-700 font-bold mt-1">💰 מחיר סופי קבוע</div>
                   )}

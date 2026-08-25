@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS slip_items (
   actual_weight_for_billing NUMERIC(10,3),      -- משקל בפועל ולחיוב (זה משמש לחישוב מחיר בניקוי ומארז)
   clean_weight              NUMERIC(10,3),      -- משקל אחרי ניקוי (תיעוד בלבד)
   unit_count                INTEGER,            -- מספר יחידות (מוצרי "מארז" שקילים, למשל 2 עופות) — לתצוגה בלבד
+  catalog_price             NUMERIC(10,2),      -- מחיר הקטלוג בזמן הליקוט (לפני מבצע) — לתעודת ההדפסה
   status                    TEXT NOT NULL DEFAULT 'picked', -- 'picked' | 'missing'
   missing_reason            TEXT                -- הערה חופשית כשה-status הוא missing
 );

@@ -61,12 +61,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     await sql`
       INSERT INTO slip_items
         (slip_id, product_id, name, unit, qty, unit_price, line_total, note,
-         requires_cleaning, ordered_weight, actual_weight_for_billing, clean_weight, unit_count,
+         requires_cleaning, ordered_weight, actual_weight_for_billing, clean_weight, unit_count, catalog_price,
          status, missing_reason)
       VALUES
         (${id}, ${it.product_id}, ${it.name}, ${it.unit}, ${it.qty}, ${it.unit_price},
          ${it.line_total}, ${it.note || null}, ${!!it.requires_cleaning}, ${it.ordered_weight || null},
-         ${it.actual_weight_for_billing || null}, ${it.clean_weight || null}, ${it.unit_count ?? null},
+         ${it.actual_weight_for_billing || null}, ${it.clean_weight || null}, ${it.unit_count ?? null}, ${it.catalog_price ?? null},
          ${itemStatus}, ${itemStatus === "missing" ? it.missing_reason || null : null})
     `;
   }

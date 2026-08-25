@@ -60,6 +60,7 @@ export interface SlipItem {
   actual_weight_for_billing: number | null; // משמש לחישוב מחיר
   clean_weight: number | null;
   unit_count: number | null; // מספר יחידות (למוצרי "מארז" שקילים — למשל 2 עופות) — לתצוגה בלבד, לא משפיע על המחיר
+  catalog_price: number | null; // מחיר הקטלוג בזמן הליקוט (לפני מבצע) — לתעודת ההדפסה
   status: SlipItemStatus;
   missing_reason: string | null;
 }
@@ -222,5 +223,6 @@ export function normalizeSlipItem(row: Record<string, unknown>): SlipItem {
     actual_weight_for_billing: row.actual_weight_for_billing == null ? null : Number(row.actual_weight_for_billing),
     clean_weight: row.clean_weight == null ? null : Number(row.clean_weight),
     unit_count: row.unit_count == null ? null : Number(row.unit_count),
+    catalog_price: row.catalog_price == null ? null : Number(row.catalog_price),
   } as SlipItem;
 }

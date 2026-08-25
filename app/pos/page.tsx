@@ -143,7 +143,7 @@ function slipToCartItem(it: SlipItem): CartItem {
     actual_weight_for_billing: it.actual_weight_for_billing,
     clean_weight: it.clean_weight,
     unit_count: it.unit_count,
-    catalog_price: null,
+    catalog_price: it.catalog_price,
     status: it.status,
     missing_reason: it.missing_reason || "",
   };
