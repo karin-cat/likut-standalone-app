@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -25,6 +25,16 @@ export default function WeightKeypad({
 }) {
   const [digits, setDigits] = useState(initialValue || "");
   const [entryUnit, setEntryUnit] = useState<"kg" | "gram">("kg");
+
+  // נועל את גלילת העמוד שברקע כל עוד המקלדת פתוחה — אחרת גלילה בתוך המקלדת
+  // "מדליפה" לעמוד שמתחת (הקטלוג נראה זז ברקע)
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
 
   function pressKey(k: string) {
     if (k === ".") {
@@ -75,7 +85,7 @@ export default function WeightKeypad({
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-white overflow-y-auto">
+    <div className="fixed inset-0 z-40 bg-white overflow-y-auto overscroll-contain">
       <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
         <button type="button" onClick={onClose} className="text-2xl w-8 text-[var(--color-text-muted)]" aria-label="סגירה">
           ✕
@@ -90,7 +100,7 @@ export default function WeightKeypad({
         </div>
       )}
 
-      <div className="px-6 pb-6 pt-5">
+      <div className="px-6 pb-3 pt-3">
         <div className="flex items-center justify-between mb-1">
           <div className="text-sm text-[var(--color-text-muted)]">
             {label} {allowGramToggle ? `(${entryUnit === "kg" ? 'ק"ג' : "גרם"})` : ""}
@@ -123,30 +133,32 @@ export default function WeightKeypad({
           )}
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={increment}
-              className="w-16 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-brand)]"
-              aria-label="הוספת יחידה"
-            >
-              +
-            </button>
+          <div className="flex flex-col gap-2 shrink-0 w-36">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={increment}
+                className="flex-1 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-brand)]"
+                aria-label="הוספת יחידה"
+              >
+                +
+              </button>
+              <button
+                type="button"
+                onClick={decrement}
+                className="flex-1 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-text-muted)]"
+                aria-label="הפחתת יחידה"
+              >
+                −
+              </button>
+            </div>
             <button
               type="button"
               onClick={backspace}
-              className="w-16 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl"
+              className="w-full h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl"
               aria-label="מחיקה"
             >
               ⌫
-            </button>
-            <button
-              type="button"
-              onClick={decrement}
-              className="w-16 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-text-muted)]"
-              aria-label="הפחתת יחידה"
-            >
-              −
             </button>
           </div>
           <button
@@ -159,7 +171,7 @@ export default function WeightKeypad({
           </button>
         </div>
         {onMoreOptions && (
-          <button type="button" onClick={onMoreOptions} className="mt-4 text-sm text-[var(--color-brand-dark)] font-bold self-start">
+          <button type="button" onClick={onMoreOptions} className="mt-2 text-sm text-[var(--color-brand-dark)] font-bold self-start">
             ⚙️ אפשרויות נוספות (הערה / מחיר ידני)
           </button>
         )}
