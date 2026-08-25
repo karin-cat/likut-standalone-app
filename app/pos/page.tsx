@@ -1096,7 +1096,7 @@ function PosPageInner() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate">{p.name}</div>
+                    <div className="font-semibold">{p.name}</div>
                     {p.sku && <div className="text-xs text-[var(--color-text-muted)]">מק&quot;ט {p.sku}</div>}
                     {p.description && (
                       <div className="text-xs text-[var(--color-text-muted)] truncate">{p.description}</div>

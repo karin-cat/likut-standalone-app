@@ -95,15 +95,15 @@ export default function WeightKeypad({
 
   return (
     <div className="fixed inset-0 z-40 bg-white overflow-y-auto overscroll-contain">
-      <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
-        <button type="button" onClick={onClose} className="text-2xl w-8 text-[var(--color-text-muted)]" aria-label="סגירה">
+      <div className="flex items-start justify-between px-4 py-2 border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
+        <button type="button" onClick={onClose} className="text-2xl w-8 shrink-0 text-[var(--color-text-muted)]" aria-label="סגירה">
           ✕
         </button>
-        <div className="flex-1 flex items-baseline gap-2 min-w-0 justify-center">
-          <span className="font-bold text-lg truncate">{title}</span>
+        <div className="flex-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0 justify-center py-1">
+          <span className="font-bold text-lg text-center">{title}</span>
           {priceLabel && <span className="text-xs text-[var(--color-text-muted)] shrink-0">{priceLabel}</span>}
         </div>
-        <span className="w-8" />
+        <span className="w-8 shrink-0" />
       </div>
 
       {notice && (
