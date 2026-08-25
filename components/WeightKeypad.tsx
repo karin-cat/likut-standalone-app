@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0"];
+const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 export default function WeightKeypad({
   title,
@@ -123,19 +123,11 @@ export default function WeightKeypad({
           )}
         </div>
         <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={clearDigits}
-            className="text-6xl font-bold tabular-nums text-right"
-            aria-label="ניקוי כדי להקליד ערך חדש"
-          >
-            {digits || "0"}
-          </button>
-          <div className="flex flex-col gap-2 shrink-0">
+          <div className="flex flex-col gap-3 shrink-0">
             <button
               type="button"
               onClick={increment}
-              className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl font-bold text-[var(--color-brand)]"
+              className="w-16 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-brand)]"
               aria-label="הוספת יחידה"
             >
               +
@@ -143,7 +135,7 @@ export default function WeightKeypad({
             <button
               type="button"
               onClick={backspace}
-              className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-xl"
+              className="w-16 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl"
               aria-label="מחיקה"
             >
               ⌫
@@ -151,12 +143,20 @@ export default function WeightKeypad({
             <button
               type="button"
               onClick={decrement}
-              className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl font-bold text-[var(--color-text-muted)]"
+              className="w-16 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-text-muted)]"
               aria-label="הפחתת יחידה"
             >
               −
             </button>
           </div>
+          <button
+            type="button"
+            onClick={clearDigits}
+            className="text-6xl font-bold tabular-nums text-left"
+            aria-label="ניקוי כדי להקליד ערך חדש"
+          >
+            {digits || "0"}
+          </button>
         </div>
         {onMoreOptions && (
           <button type="button" onClick={onMoreOptions} className="mt-4 text-sm text-[var(--color-brand-dark)] font-bold self-start">
@@ -165,11 +165,25 @@ export default function WeightKeypad({
         )}
       </div>
 
-      <div className="px-4 py-2 border-t border-[var(--color-border)] flex flex-col gap-2">
+      <div className="px-4 py-2 border-t border-[var(--color-border)] grid grid-cols-4 gap-2">
+        <button
+          type="button"
+          onClick={() => pressKey(".")}
+          className="rounded-xl border border-[var(--color-border)] text-2xl font-bold py-2.5 active:bg-[var(--color-bg-soft)]"
+        >
+          .
+        </button>
+        <button
+          type="button"
+          onClick={() => pressKey("0")}
+          className="rounded-xl border border-[var(--color-border)] text-2xl font-bold py-2.5 active:bg-[var(--color-bg-soft)]"
+        >
+          0
+        </button>
         <button
           type="button"
           onClick={handleConfirm}
-          className="w-full rounded-xl bg-[var(--color-brand)] text-white font-bold text-xl py-2.5"
+          className="col-span-2 rounded-xl bg-[var(--color-brand)] text-white font-bold text-xl py-2.5"
         >
           ✓ אשר
         </button>
