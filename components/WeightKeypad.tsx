@@ -18,7 +18,7 @@ export default function WeightKeypad({
   label: string;
   onConfirm: (value: number) => void;
   onClose: () => void;
-  onMoreOptions?: () => void;
+  onMoreOptions?: (currentValue: number | null) => void;
   initialValue?: string;
   allowGramToggle?: boolean;
   notice?: string | null;
@@ -47,9 +47,16 @@ export default function WeightKeypad({
     setDigits((d) => (d === "0" ? k : d + k));
   }
 
-  function handleConfirm() {
+  // הערך המספרי שהוקלד עד כה (מומר לק"ג אם רלוונטי) — null אם עדיין לא הוקלד כלום תקין
+  function currentValue(): number | null {
     const v = parseFloat(digits);
-    if (!isNaN(v) && v > 0) onConfirm(entryUnit === "gram" ? v / 1000 : v);
+    if (isNaN(v) || v <= 0) return null;
+    return entryUnit === "gram" ? v / 1000 : v;
+  }
+
+  function handleConfirm() {
+    const v = currentValue();
+    if (v !== null) onConfirm(v);
   }
 
   function switchUnit(u: "kg" | "gram") {
@@ -171,7 +178,11 @@ export default function WeightKeypad({
           </button>
         </div>
         {onMoreOptions && (
-          <button type="button" onClick={onMoreOptions} className="my-5 text-sm text-[var(--color-brand-dark)] font-bold self-start">
+          <button
+            type="button"
+            onClick={() => onMoreOptions(currentValue())}
+            className="my-5 text-sm text-[var(--color-brand-dark)] font-bold self-start"
+          >
             ⚙️ אפשרויות נוספות (הערה / מחיר ידני)
           </button>
         )}

@@ -863,10 +863,15 @@ function PosPageInner() {
     addNewItemToCart(item);
   }
 
-  function handleKeypadMoreOptions() {
+  function handleKeypadMoreOptions(currentValue: number | null) {
     if (!keypadFlow) return;
-    setPendingKeypadReturn(keypadFlow);
-    setEditing({ index: null, item: keypadFlow.item });
+    // מעביר את מה שכבר הוקלד במקלדת (משקל/כמות) לתוך "אפשרויות נוספות" — אחרת זה הולך לאיבוד
+    const item: CartItem =
+      currentValue !== null
+        ? { ...keypadFlow.item, qty: keypadFlow.item.unit === "unit" ? Math.round(currentValue) : currentValue }
+        : keypadFlow.item;
+    setPendingKeypadReturn({ ...keypadFlow, item });
+    setEditing({ index: null, item });
     setKeypadFlow(null);
   }
 
@@ -1214,7 +1219,7 @@ function PosPageInner() {
           title={keypadFlow.item.name}
           label={keypadFlow.item.unit === "unit" ? "כמות יחידות" : "משקל"}
           allowGramToggle={keypadFlow.item.unit !== "unit"}
-          initialValue={keypadFlow.item.unit === "unit" ? "1" : ""}
+          initialValue={keypadFlow.item.qty > 0 ? String(keypadFlow.item.qty) : ""}
           notice={packageNoteFor(keypadFlow.product) ? `📦 ${packageNoteFor(keypadFlow.product)}` : null}
           onConfirm={handleKeypadConfirm}
           onClose={() => setKeypadFlow(null)}
