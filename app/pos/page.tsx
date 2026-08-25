@@ -1217,6 +1217,7 @@ function PosPageInner() {
       {keypadFlow && (
         <WeightKeypad
           title={keypadFlow.item.name}
+          priceLabel={`${fmt(keypadFlow.item.unit_price)} / ${keypadFlow.item.unit === "unit" ? "יח'" : 'ק"ג'}`}
           label={keypadFlow.item.unit === "unit" ? "כמות יחידות" : "משקל"}
           allowGramToggle={keypadFlow.item.unit !== "unit"}
           initialValue={keypadFlow.item.qty > 0 ? String(keypadFlow.item.qty) : ""}

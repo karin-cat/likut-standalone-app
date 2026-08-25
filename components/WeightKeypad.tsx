@@ -6,6 +6,7 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 export default function WeightKeypad({
   title,
+  priceLabel,
   label,
   onConfirm,
   onClose,
@@ -15,6 +16,7 @@ export default function WeightKeypad({
   notice,
 }: {
   title: string;
+  priceLabel?: string;
   label: string;
   onConfirm: (value: number) => void;
   onClose: () => void;
@@ -97,7 +99,10 @@ export default function WeightKeypad({
         <button type="button" onClick={onClose} className="text-2xl w-8 text-[var(--color-text-muted)]" aria-label="סגירה">
           ✕
         </button>
-        <div className="font-bold text-lg truncate">{title}</div>
+        <div className="flex-1 flex items-baseline gap-2 min-w-0 justify-center">
+          <span className="font-bold text-lg truncate">{title}</span>
+          {priceLabel && <span className="text-xs text-[var(--color-text-muted)] shrink-0">{priceLabel}</span>}
+        </div>
         <span className="w-8" />
       </div>
 
