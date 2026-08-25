@@ -25,6 +25,7 @@ export default function ItemEditModal({
   const [name, setName] = useState(item.name);
   const [unit, setUnit] = useState<CartItem["unit"]>(item.unit);
   const isWeight = unit !== "unit";
+  const wasOriginallyWeight = item.unit !== "unit"; // לתצוגה הקבועה מלמעלה — לא זזה כשדורסים למטה
   const [freeQty, setFreeQty] = useState<string>(item.qty ? String(item.qty) : "");
   const [unitPrice, setUnitPrice] = useState<string>(item.unit_price ? String(item.unit_price) : "");
   const [lineTotal, setLineTotal] = useState<string>(
@@ -44,12 +45,13 @@ export default function ItemEditModal({
     const updated: CartItem = {
       ...item,
       name: isFreeItem ? name.trim() || item.name : item.name,
-      unit: isFreeItem ? unit : item.unit,
-      qty: isFreeItem && !isNaN(fq) && fq >= 0 ? (unit === "unit" ? Math.max(1, Math.round(fq)) : fq) : item.qty,
-      unit_price: isFreeItem && !isNaN(up) && up >= 0 ? up : item.unit_price,
+      unit,
+      qty: !isNaN(fq) && fq >= 0 ? (unit === "unit" ? Math.max(1, Math.round(fq)) : fq) : item.qty,
+      unit_price: !isNaN(up) && up >= 0 ? up : item.unit_price,
       line_total: !isNaN(lt) && lt >= 0 ? lt : null,
       note,
-      unit_count: item.unit_count != null ? (!isNaN(uc) && uc >= 1 ? Math.round(uc) : item.unit_count) : null,
+      // אם דרסו את סוג היחידה למשהו שאינו משקל, מספר-היחידות-לתצוגה (עוף שלם וכו') כבר לא רלוונטי
+      unit_count: unit === "kg" && item.unit_count != null ? (!isNaN(uc) && uc >= 1 ? Math.round(uc) : item.unit_count) : null,
       status: missing ? "missing" : "picked",
       missing_reason: missing ? missingReason.trim() : "",
     };
@@ -122,7 +124,7 @@ export default function ItemEditModal({
                 <div className="text-sm text-[var(--color-text-muted)] mt-1">{item.description}</div>
               )}
               <div className="font-bold text-lg mt-2">
-                {fmt(item.unit_price)} <span className="text-sm font-normal">{isWeight ? '/ ק"ג' : "/ יח'"}</span>
+                {fmt(item.unit_price)} <span className="text-sm font-normal">{wasOriginallyWeight ? '/ ק"ג' : "/ יח'"}</span>
               </div>
             </>
           )}
@@ -172,6 +174,52 @@ export default function ItemEditModal({
                     onChange={(e) => setUnitCount(e.target.value)}
                   />
                 </label>
+              )}
+
+              {!isFreeItem && (
+                <div className="flex flex-col gap-3 bg-amber-50/50 border border-amber-200 rounded-lg p-3">
+                  <div className="text-sm font-bold">✏️ דריסה ידנית לשורה זו — לא חובה</div>
+                  <div className="flex gap-3">
+                    <label className="flex flex-col gap-1 flex-1">
+                      <span className="text-sm text-[var(--color-text-muted)]">יחידת מידה</span>
+                      <select
+                        className="field-underline"
+                        value={unit}
+                        onChange={(e) => setUnit(e.target.value as CartItem["unit"])}
+                      >
+                        <option value="unit">יח&apos;</option>
+                        <option value="kg">ק&quot;ג</option>
+                        <option value="gram">גרם</option>
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1 flex-1">
+                      <span className="text-sm text-[var(--color-text-muted)]">{unit === "unit" ? "כמות" : "משקל"}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step={unit === "unit" ? "1" : "0.01"}
+                        min="0"
+                        className="field-underline"
+                        value={freeQty}
+                        onChange={(e) => setFreeQty(e.target.value)}
+                      />
+                    </label>
+                  </div>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-sm text-[var(--color-text-muted)]">
+                      מחיר {unit === "unit" ? "ליחידה" : 'לק"ג'} (₪)
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      className="field-underline"
+                      value={unitPrice}
+                      onChange={(e) => setUnitPrice(e.target.value)}
+                    />
+                  </label>
+                </div>
               )}
 
               <label className="flex flex-col gap-1">
