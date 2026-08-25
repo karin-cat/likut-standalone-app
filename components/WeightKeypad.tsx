@@ -7,6 +7,8 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 export default function WeightKeypad({
   title,
   priceLabel,
+  imageUrl,
+  avatarColor,
   label,
   onConfirm,
   onClose,
@@ -17,6 +19,8 @@ export default function WeightKeypad({
 }: {
   title: string;
   priceLabel?: string;
+  imageUrl?: string | null;
+  avatarColor?: string;
   label: string;
   onConfirm: (value: number) => void;
   onClose: () => void;
@@ -99,7 +103,18 @@ export default function WeightKeypad({
         <button type="button" onClick={onClose} className="text-2xl w-8 shrink-0 text-[var(--color-text-muted)]" aria-label="סגירה">
           ✕
         </button>
-        <div className="flex-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0 justify-center py-1">
+        <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 justify-center py-1">
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageUrl} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+          ) : (
+            <div
+              className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-white font-bold text-sm"
+              style={{ background: avatarColor || "#999" }}
+            >
+              {title.trim().charAt(0)}
+            </div>
+          )}
           <span className="font-bold text-lg text-center">{title}</span>
           {priceLabel && <span className="text-xs text-[var(--color-text-muted)] shrink-0">{priceLabel}</span>}
         </div>
