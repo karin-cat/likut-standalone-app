@@ -100,12 +100,12 @@ export default function WeightKeypad({
   return (
     <div className="fixed inset-0 z-40 bg-white overflow-y-auto overscroll-contain">
       <div className="border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
-        <div className="flex justify-start px-4 pt-1">
+        <div className="flex justify-start px-4 pt-0.5">
           <button type="button" onClick={onClose} className="text-2xl w-8 shrink-0 text-[var(--color-text-muted)]" aria-label="סגירה">
             ✕
           </button>
         </div>
-        <div className="flex items-start gap-3 px-4 pb-2">
+        <div className="flex items-start gap-3 px-4 pb-1.5">
           <div className="flex-1 min-w-0 text-right">
             <div className="font-bold text-lg">{title}</div>
             {priceLabel && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{priceLabel}</div>}
@@ -130,8 +130,8 @@ export default function WeightKeypad({
         </div>
       )}
 
-      <div className="px-4 pb-2 pt-2">
-        <div className="flex items-center justify-between mb-1">
+      <div className="px-4 pb-1 pt-1">
+        <div className="flex items-center justify-between mb-0.5">
           <div className="text-sm text-[var(--color-text-muted)]">
             {label} {allowGramToggle ? `(${entryUnit === "kg" ? 'ק"ג' : "גרם"})` : ""}
           </div>
@@ -168,7 +168,7 @@ export default function WeightKeypad({
               <button
                 type="button"
                 onClick={increment}
-                className="flex-1 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-brand)]"
+                className="flex-1 h-14 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-brand)]"
                 aria-label="הוספת יחידה"
               >
                 +
@@ -176,7 +176,7 @@ export default function WeightKeypad({
               <button
                 type="button"
                 onClick={decrement}
-                className="flex-1 h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-text-muted)]"
+                className="flex-1 h-14 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-text-muted)]"
                 aria-label="הפחתת יחידה"
               >
                 −
@@ -185,7 +185,7 @@ export default function WeightKeypad({
             <button
               type="button"
               onClick={backspace}
-              className="w-full h-16 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl"
+              className="w-full h-14 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl"
               aria-label="מחיקה"
             >
               ⌫
@@ -211,7 +211,7 @@ export default function WeightKeypad({
         )}
       </div>
 
-      <div className="px-4 py-1.5 border-t border-[var(--color-border)] grid grid-cols-4 gap-2">
+      <div className="px-4 py-1 border-t border-[var(--color-border)] grid grid-cols-4 gap-2">
         <button
           type="button"
           onClick={() => pressKey(".")}
