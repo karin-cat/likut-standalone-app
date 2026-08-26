@@ -99,7 +99,7 @@ export default function WeightKeypad({
 
   return (
     <div className="fixed inset-0 z-40 bg-white overflow-y-auto overscroll-contain flex flex-col">
-      <div className="border-b border-[var(--color-border)] sticky top-0 bg-white z-10 shrink-0">
+      <div className="border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-soft)] z-10 shrink-0">
         <div className="flex justify-start px-4 pt-0.5">
           <button type="button" onClick={onClose} className="text-2xl w-8 shrink-0 text-[var(--color-text-muted)]" aria-label="סגירה">
             ✕
