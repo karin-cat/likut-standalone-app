@@ -99,26 +99,29 @@ export default function WeightKeypad({
 
   return (
     <div className="fixed inset-0 z-40 bg-white overflow-y-auto overscroll-contain">
-      <div className="flex items-start justify-between px-4 py-2 border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
-        <button type="button" onClick={onClose} className="text-2xl w-8 shrink-0 text-[var(--color-text-muted)]" aria-label="סגירה">
-          ✕
-        </button>
-        <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 justify-center py-1">
+      <div className="border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
+        <div className="flex justify-start px-4 pt-2">
+          <button type="button" onClick={onClose} className="text-2xl w-8 shrink-0 text-[var(--color-text-muted)]" aria-label="סגירה">
+            ✕
+          </button>
+        </div>
+        <div className="flex items-start gap-3 px-4 pb-3">
+          <div className="flex-1 min-w-0 text-right">
+            <div className="font-bold text-lg">{title}</div>
+            {priceLabel && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{priceLabel}</div>}
+          </div>
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+            <img src={imageUrl} alt="" className="w-[72px] h-[72px] rounded-lg object-cover shrink-0" />
           ) : (
             <div
-              className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-white font-bold text-sm"
+              className="w-[72px] h-[72px] rounded-lg shrink-0 flex items-center justify-center text-white font-bold text-2xl"
               style={{ background: avatarColor || "#999" }}
             >
               {title.trim().charAt(0)}
             </div>
           )}
-          <span className="font-bold text-lg text-center">{title}</span>
-          {priceLabel && <span className="text-xs text-[var(--color-text-muted)] shrink-0">{priceLabel}</span>}
         </div>
-        <span className="w-8 shrink-0" />
       </div>
 
       {notice && (
