@@ -100,12 +100,12 @@ export default function WeightKeypad({
   return (
     <div className="fixed inset-0 z-40 bg-white overflow-y-auto overscroll-contain">
       <div className="border-b border-[var(--color-border)] sticky top-0 bg-white z-10">
-        <div className="flex justify-start px-4 pt-2">
+        <div className="flex justify-start px-4 pt-1">
           <button type="button" onClick={onClose} className="text-2xl w-8 shrink-0 text-[var(--color-text-muted)]" aria-label="סגירה">
             ✕
           </button>
         </div>
-        <div className="flex items-start gap-3 px-4 pb-3">
+        <div className="flex items-start gap-3 px-4 pb-2">
           <div className="flex-1 min-w-0 text-right">
             <div className="font-bold text-lg">{title}</div>
             {priceLabel && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{priceLabel}</div>}
@@ -130,7 +130,7 @@ export default function WeightKeypad({
         </div>
       )}
 
-      <div className="px-4 pb-3 pt-3">
+      <div className="px-4 pb-2 pt-2">
         <div className="flex items-center justify-between mb-1">
           <div className="text-sm text-[var(--color-text-muted)]">
             {label} {allowGramToggle ? `(${entryUnit === "kg" ? 'ק"ג' : "גרם"})` : ""}
@@ -204,32 +204,32 @@ export default function WeightKeypad({
           <button
             type="button"
             onClick={() => onMoreOptions(currentValue())}
-            className="my-5 text-sm text-[var(--color-brand-dark)] font-bold self-start"
+            className="my-1 text-sm text-[var(--color-brand-dark)] font-bold self-start"
           >
             ⚙️ אפשרויות נוספות (הערה / מחיר ידני)
           </button>
         )}
       </div>
 
-      <div className="px-4 py-2 border-t border-[var(--color-border)] grid grid-cols-4 gap-2">
+      <div className="px-4 py-1.5 border-t border-[var(--color-border)] grid grid-cols-4 gap-2">
         <button
           type="button"
           onClick={() => pressKey(".")}
-          className="rounded-xl border border-[var(--color-border)] text-2xl font-bold py-2.5 active:bg-[var(--color-bg-soft)]"
+          className="rounded-xl border border-[var(--color-border)] text-2xl font-bold py-2 active:bg-[var(--color-bg-soft)]"
         >
           .
         </button>
         <button
           type="button"
           onClick={() => pressKey("0")}
-          className="rounded-xl border border-[var(--color-border)] text-2xl font-bold py-2.5 active:bg-[var(--color-bg-soft)]"
+          className="rounded-xl border border-[var(--color-border)] text-2xl font-bold py-2 active:bg-[var(--color-bg-soft)]"
         >
           0
         </button>
         <button
           type="button"
           onClick={handleConfirm}
-          className="col-span-2 rounded-xl bg-[var(--color-brand)] text-white font-bold text-xl py-2.5"
+          className="col-span-2 rounded-xl bg-[var(--color-brand)] text-white font-bold text-xl py-2"
         >
           ✓ אשר
         </button>
@@ -241,7 +241,7 @@ export default function WeightKeypad({
             key={k}
             type="button"
             onClick={() => pressKey(k)}
-            className="h-16 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)]"
+            className="h-14 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)]"
           >
             {k}
           </button>
