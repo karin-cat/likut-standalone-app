@@ -105,7 +105,7 @@ export default function WeightKeypad({
             ✕
           </button>
         </div>
-        <div className="flex items-start gap-3 px-4 pb-1.5">
+        <div className="flex items-start gap-2 px-4 pb-1.5">
           <div className="flex-1 min-w-0 text-right">
             <div className="font-bold text-lg">{title}</div>
             {priceLabel && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{priceLabel}</div>}
@@ -168,7 +168,7 @@ export default function WeightKeypad({
               <button
                 type="button"
                 onClick={increment}
-                className="flex-1 h-14 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-brand)]"
+                className="flex-1 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-brand)]"
                 aria-label="הוספת יחידה"
               >
                 +
@@ -176,7 +176,7 @@ export default function WeightKeypad({
               <button
                 type="button"
                 onClick={decrement}
-                className="flex-1 h-14 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-text-muted)]"
+                className="flex-1 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-3xl font-bold text-[var(--color-text-muted)]"
                 aria-label="הפחתת יחידה"
               >
                 −
@@ -185,7 +185,7 @@ export default function WeightKeypad({
             <button
               type="button"
               onClick={backspace}
-              className="w-full h-14 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl"
+              className="w-full h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center text-2xl"
               aria-label="מחיקה"
             >
               ⌫
@@ -241,7 +241,7 @@ export default function WeightKeypad({
             key={k}
             type="button"
             onClick={() => pressKey(k)}
-            className="h-14 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)]"
+            className="h-12 border border-[var(--color-border)] text-3xl font-bold flex items-center justify-center active:bg-[var(--color-bg-soft)]"
           >
             {k}
           </button>
